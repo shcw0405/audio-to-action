@@ -1,0 +1,98 @@
+# audio-to-action settings
+#
+# All values here are read by tools/asr_client.py and tools/utils.py.
+# Anything sensitive (API keys, tokens) is referenced *by env-var name*,
+# never written inline. The runtime resolves it via os.environ[<env_name>].
+
+# --------------------------------------------------------------------------
+# Automatic Speech Recognition
+# --------------------------------------------------------------------------
+asr:
+  # Active provider. Must match a class registered in tools/asr_client.py.
+  # Built-in: "openai_compatible".
+  # Stubs ready for extension: "faster_whisper_local", "deepgram",
+  # "azure", "google", "assemblyai", "custom_http".
+  provider: openai_compatible
+
+  # OpenAI-compatible config — used when provider == openai_compatible
+  openai_compatible:
+    base_url: http://127.0.0.1:8836/v1   # local Doubao ASR; auth disabled
+    api_key_env: ASR_API_KEY             # env-var name; if unset, no Authorization header is sent
+    model: doubao-asr
+    # Pass-through of OpenAI /audio/transcriptions params:
+    language: zh                         # ISO-639-1; null = auto-detect
+    response_format: verbose_json        # we need segments+timestamps
+    timestamp_granularities: [segment]   # or [word, segment] if supported
+    temperature: 0.0
+    timeout_seconds: 1800                # 92-minute file at localhost — be generous
+
+  # Local faster-whisper (not implemented in MVP — interface is in place)
+  faster_whisper_local:
+    model_size: large-v3
+    device: auto
+    compute_type: auto
+    language: zh
+
+  # Custom HTTP endpoint (not implemented in MVP)
+  custom_http:
+    url: https://example.invalid/transcribe
+    api_key_env: CUSTOM_ASR_KEY
+    method: POST
+    field_name: file
+
+# --------------------------------------------------------------------------
+# Diarization
+# --------------------------------------------------------------------------
+diarization:
+  # When true, the skill will *try* to assign speaker labels. MVP keeps the
+  # interface but the only available provider is "none".
+  enable: false
+  provider: none           # none | pyannote | whisperx | deepgram
+
+# --------------------------------------------------------------------------
+# Audio preprocessing
+# --------------------------------------------------------------------------
+audio:
+  # Used by tools/utils.py::probe_audio
+  supported_formats: [mp3, wav, m4a, flac, ogg, webm]
+  warn_duration_seconds: 7200             # 2 h
+  hard_max_duration_seconds: 21600        # 6 h, refuse beyond this
+  ffmpeg_path: ffmpeg                     # override if not on PATH
+  resample_to_hz: 16000                   # most ASR engines like 16k mono
+  resample_to_channels: 1
+
+# --------------------------------------------------------------------------
+# Classification thresholds
+# --------------------------------------------------------------------------
+classification:
+  # Below this confidence, treat the recording as `unknown` and ask the user.
+  ambiguous_below: 0.6
+  # Allowed labels (used by validators in transcript_normalizer / schema)
+  labels:
+    - group_meeting
+    - advisor_student_discussion
+    - casual_discussion
+    - voice_memo
+    - student_progress_report
+    - unknown
+
+# --------------------------------------------------------------------------
+# Output behaviour
+# --------------------------------------------------------------------------
+output:
+  # Where structured artifacts go. {source_dir} = directory of source audio.
+  default_dir: "{source_dir}/out"
+  write_transcript_json: true
+  write_cleaned_markdown: true
+  write_preset_report: true
+
+  # Hard-disabled in MVP — drafts are reviewable, never auto-sent.
+  send_messages: false
+
+# --------------------------------------------------------------------------
+# Safety
+# --------------------------------------------------------------------------
+safety:
+  redact_keys_in_logs: true
+  forbid_full_transcript_in_drafts: true
+  require_speaker_map_for_per_person_drafts: true

@@ -1,0 +1,22 @@
+# Runtime dependencies for audio-to-action.
+#
+# - pyyaml: read settings.yaml
+# - requests: call OpenAI-compatible ASR endpoints
+# - pytest: run the test suite
+#
+# Optional, recommended:
+# - imageio-ffmpeg: bundles a static ffmpeg binary so you don't need
+#                   `brew install ffmpeg` to handle Opus-in-MP4 / FLAC /
+#                   resampling. Only needed for non-WAV inputs or when
+#                   your ASR provider requires resampling.
+#
+# Other ASR providers (faster-whisper, deepgram, azure, ...) bring their
+# own deps; install on demand.
+
+pyyaml>=6.0
+requests>=2.31
+pytest>=7.0
+
+# Uncomment if your ASR backend can't decode the format you're feeding it
+# and you don't have ffmpeg on PATH:
+# imageio-ffmpeg>=0.5

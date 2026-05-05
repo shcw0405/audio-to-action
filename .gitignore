@@ -1,0 +1,53 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- venv / tooling ---
+.venv/
+venv/
+env/
+.python-version
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- editor / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# --- audio-to-action runtime artefacts ---
+# Pipeline output goes next to the source audio by default; never commit it.
+out/
+*.transcript.json
+*.16k.wav
+
+# Audio files themselves — never commit. They're the user's data, often
+# private (lab meetings), and frequently large.
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.ogg
+*.webm
+
+# Local-only settings. Keep settings.yaml in git as a reference; if you
+# need a private override, copy it to settings.local.yaml.
+settings.local.yaml
+
+# Secrets — should never be in the repo, but belt and suspenders.
+.env
+.env.*
+*.key
