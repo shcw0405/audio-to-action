@@ -41,8 +41,8 @@
 <span class="label">这个 skill   </span><span class="arrow">→ </span><span class="good">音频 → 摘要 + 任务 + 草稿 → 你审查 → 发送</span></pre>
 
         <div class="ctas">
-          <a class="btn btn-primary" href="https://github.com/shcw0405/audio-to-action">View on GitHub →</a>
-          <a class="btn btn-secondary" href="#demo">看一段真实演示</a>
+          <a class="btn btn-primary" href="#demo">▶ 试一下交互式 demo</a>
+          <a class="btn btn-secondary" href="https://github.com/shcw0405/audio-to-action">View on GitHub</a>
         </div>
       </div>
     </section>
@@ -84,51 +84,72 @@
       </div>
     </section>
 
-    <!-- ============================ LIVE DEMO ============================ -->
+    <!-- ============================ INTERACTIVE DEMO ============================ -->
     <section id="demo">
       <div class="container">
-        <h2>一次真实的端到端运行</h2>
-        <p class="subhead">用一段实验室真实录音的 60 秒片段走完整个 pipeline。下面所有 JSON、文本、用时数字均来自真实运行结果，未经修饰。</p>
+        <h2>交互式 pipeline 演示</h2>
+        <p class="subhead">用一段实验室真实录音的 60 秒片段，<strong>点击每个 ▶ 按钮逐步运行</strong>。下面所有 JSON、文本、用时数字均来自真实运行结果，未经修饰。</p>
 
+        <!-- Audio player -->
+        <div class="audio-player" id="audio-player">
+          <div class="audio-meta">
+            <strong>实验室真实讨论片段 · 60s</strong>
+            <span class="audio-tag">已匿名化处理</span>
+          </div>
+          <audio controls preload="metadata">
+            <source src="demo_clip.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放。
+          </audio>
+          <p class="audio-caption">
+            原始为 16 kHz mono PCM-WAV；为保护说话人声纹，公开版本经 ffmpeg 处理：
+            <code>asetrate*0.84</code>（pitch −3 semitones）<code>+ atempo</code>（恢复时长）
+            <code>+ aresample=8000</code>（降采样到电话带宽）。语义保留，声纹破坏。
+          </p>
+        </div>
+
+        <!-- Demo metadata -->
         <div class="demo-meta">
           <dl>
-            <dt>录音来源</dt><dd>真实研究讨论片段（开头 60s）</dd>
-            <dt>原始格式</dt><dd>Opus-in-MP4 m4a (来源应用导出)</dd>
-            <dt>送进 ASR 的格式</dt><dd>16,000 Hz mono PCM-WAV (经 ffmpeg 转码)</dd>
+            <dt>送进 ASR 的格式</dt><dd>16,000 Hz mono PCM-WAV (经 ffmpeg 转码自 Opus-in-MP4 m4a)</dd>
             <dt>大小</dt><dd>1,921,102 bytes (1.83 MB)</dd>
             <dt>时长</dt><dd>60.13 s</dd>
             <dt>ASR backend</dt><dd>local Doubao @ 127.0.0.1:8836，无 auth</dd>
-            <dt>处理用时</dt><dd>72 s（≈ 0.83× 实时）</dd>
+            <dt>处理用时</dt><dd>72 s（≈ 0.83× 实时；下面的动画压缩到 ~1.5s）</dd>
           </dl>
         </div>
 
         <!-- STEP 1: PROBE -->
-        <div class="demo-step">
+        <div class="demo-step" data-step="probe">
           <div class="step-head">
             <span class="step-num">STEP 1</span>
             <h3 class="step-title">probe_audio — 文件预检</h3>
+            <button class="step-btn" data-action="run-step" data-target="probe">▶ 运行</button>
           </div>
           <p class="step-desc">检查格式、大小、时长。本机没有 ffprobe，<code>duration</code> 字段降级为 <code>None</code> 并发出 warning，但不阻断流程。</p>
+          <div class="step-output">
 <pre><code><span class="c"># tools/utils.py::probe_audio  (real stdout)</span>
 [probe]    /tmp/asr_probe_60s.wav
 [probe]    ext=<span class="s">wav</span>  size=<span class="n">1.83 MB</span>  duration=<span class="w">None</span>
 [probe]    warn: ffprobe not found on PATH; cannot determine duration.
                  Install ffmpeg to enable duration checks.</code></pre>
+          </div>
         </div>
 
-        <!-- STEP 2: ASR CALL -->
-        <div class="demo-step">
+        <!-- STEP 2: ASR -->
+        <div class="demo-step" data-step="asr" data-requires="probe">
           <div class="step-head">
             <span class="step-num">STEP 2</span>
-            <h3 class="step-title">asr_client.transcribe — 调 ASR</h3>
+            <h3 class="step-title">asr_client.transcribe — 调 Doubao</h3>
+            <button class="step-btn" data-action="run-step" data-target="asr" disabled>▶ 调用 ASR</button>
           </div>
           <p class="step-desc">完全走 OpenAI 兼容路径：<code>POST /v1/audio/transcriptions</code>。adapter 不知道服务端是 Doubao、Whisper 还是 vLLM —— 这是配置层决定的。</p>
+          <div class="step-output">
 <pre><code><span class="c"># settings.yaml::asr.openai_compatible</span>
 <span class="k">base_url</span>:    <span class="s">http://127.0.0.1:8836/v1</span>
 <span class="k">model</span>:       <span class="s">doubao-asr</span>
 <span class="k">language</span>:    <span class="s">zh</span>
 <span class="k">api_key_env</span>: <span class="s">ASR_API_KEY</span>   <span class="c"># env var unset → 不发 Authorization 头</span></code></pre>
-
+            <p class="elapsed">⏱ <span data-elapsed></span></p>
 <pre><code><span class="c">// raw response from Doubao</span>
 {
   <span class="k">"task"</span>:     <span class="s">"transcribe"</span>,
@@ -137,19 +158,21 @@
   <span class="k">"text"</span>:     <span class="s">"是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。"</span>
   <span class="c">// note: no "segments" key — this server doesn't emit them</span>
 }</code></pre>
-
-          <div class="notice">
-            <strong>关键发现：</strong> 这个 endpoint 不返回 <code>segments</code> 数组，只给 <code>text</code>。普通 ASR wrapper 到这里就结束 —— 但 skill 的下游会因此<strong>触发安全机制</strong>，拒绝生成需要时间戳引文的产物（per-person 草稿、按人拆分任务）。这不是 bug，是<em>设计</em>。
+            <div class="notice">
+              <strong>关键发现：</strong> 这个 endpoint 不返回 <code>segments</code> 数组，只给 <code>text</code>。普通 ASR wrapper 到这里就结束 —— 但 skill 的下游会因此<strong>触发安全机制</strong>。这不是 bug，是<em>设计</em>。
+            </div>
           </div>
         </div>
 
         <!-- STEP 3: NORMALIZE -->
-        <div class="demo-step">
+        <div class="demo-step" data-step="normalize" data-requires="asr">
           <div class="step-head">
             <span class="step-num">STEP 3</span>
             <h3 class="step-title">normalize — 归一化为统一 Transcript</h3>
+            <button class="step-btn" data-action="run-step" data-target="normalize" disabled>▶ 归一化</button>
           </div>
           <p class="step-desc">无论 provider 给什么形状，下游只看见这一种 schema。<code>segments</code> 缺失时不抛错，留空数组，把判断留给后续步骤。</p>
+          <div class="step-output">
 <pre><code><span class="c">// out/transcript.json (real output)</span>
 {
   <span class="k">"source_file"</span>: <span class="s">"/tmp/asr_probe_60s.wav"</span>,
@@ -163,15 +186,91 @@
     <span class="k">"diarization"</span>:  <span class="a">false</span>
   }
 }</code></pre>
+          </div>
+        </div>
+
+        <!-- DIARIZATION SUB-STEP -->
+        <div class="demo-step diarization-block" data-step="diarize" data-requires="normalize">
+          <div class="step-head">
+            <span class="step-num accent-warn">SIDE STEP</span>
+            <h3 class="step-title">谁是谁？diarization 怎么分</h3>
+            <button class="step-btn" data-action="run-diarize" disabled>▶ 看一个合成示例</button>
+          </div>
+          <p class="step-desc">真实的这条录音 <code>segments=[]</code>，所以 diarization 跑不起来 —— 但接口在。如果 provider 给出了 segments + diarization 给出了 turns，<code>transcript_normalizer.py</code> 会按时间重叠把 speaker 合并到 segment 上。下面是一个合成示例（非真实数据）。</p>
+
+          <div class="step-output">
+            <p class="diarize-disclaimer"><strong>⚠️ 以下数据为合成演示，非真实录音 ASR 输出。</strong></p>
+
+            <h4 class="diarize-sub-title">输入 1：ASR segments（如果 provider 返回了）</h4>
+            <div class="timeline" data-timeline="segments">
+              <div class="time-axis"><span>0s</span><span>15s</span><span>30s</span><span>45s</span><span>60s</span></div>
+              <div class="track">
+                <div class="seg" style="left:0%;width:8%"   title="seg 1: 0.0–4.8s">①</div>
+                <div class="seg" style="left:8%;width:11%"  title="seg 2: 4.8–11.4s">②</div>
+                <div class="seg" style="left:19%;width:14%" title="seg 3: 11.4–19.8s">③</div>
+                <div class="seg" style="left:33%;width:9%"  title="seg 4: 19.8–25.2s">④</div>
+                <div class="seg" style="left:42%;width:13%" title="seg 5: 25.2–33s">⑤</div>
+                <div class="seg" style="left:55%;width:18%" title="seg 6: 33–43.8s">⑥</div>
+                <div class="seg" style="left:73%;width:13%" title="seg 7: 43.8–51.6s">⑦</div>
+                <div class="seg" style="left:86%;width:14%" title="seg 8: 51.6–60s">⑧</div>
+              </div>
+            </div>
+
+            <h4 class="diarize-sub-title">输入 2：diarization turns（pyannote 等）</h4>
+            <div class="timeline" data-timeline="turns">
+              <div class="time-axis"><span>0s</span><span>15s</span><span>30s</span><span>45s</span><span>60s</span></div>
+              <div class="track">
+                <div class="turn s1" style="left:0%;width:32%"  title="SPEAKER_01: 0.0–19.2s">SPEAKER_01</div>
+                <div class="turn s2" style="left:32%;width:23%" title="SPEAKER_02: 19.2–33.0s">SPEAKER_02</div>
+                <div class="turn s1" style="left:55%;width:18%" title="SPEAKER_01: 33.0–43.8s">SPEAKER_01</div>
+                <div class="turn s2" style="left:73%;width:27%" title="SPEAKER_02: 43.8–60s">SPEAKER_02</div>
+              </div>
+            </div>
+
+            <h4 class="diarize-sub-title">合并后：每个 segment 拿到一个 speaker</h4>
+            <div class="timeline" data-timeline="merged">
+              <div class="time-axis"><span>0s</span><span>15s</span><span>30s</span><span>45s</span><span>60s</span></div>
+              <div class="track">
+                <div class="seg s1" style="left:0%;width:8%"   title="seg 1 → SPEAKER_01">①</div>
+                <div class="seg s1" style="left:8%;width:11%"  title="seg 2 → SPEAKER_01">②</div>
+                <div class="seg s2" style="left:19%;width:14%" title="seg 3 → SPEAKER_02 (overlap dominant)">③</div>
+                <div class="seg s2" style="left:33%;width:9%"  title="seg 4 → SPEAKER_02">④</div>
+                <div class="seg s2" style="left:42%;width:13%" title="seg 5 → SPEAKER_02 (boundary)">⑤</div>
+                <div class="seg s1" style="left:55%;width:18%" title="seg 6 → SPEAKER_01">⑥</div>
+                <div class="seg s2" style="left:73%;width:13%" title="seg 7 → SPEAKER_02">⑦</div>
+                <div class="seg s2" style="left:86%;width:14%" title="seg 8 → SPEAKER_02">⑧</div>
+              </div>
+            </div>
+
+            <p class="diarize-explain">合并规则（<code>transcript_normalizer.py::_merge_diarization</code>）：每个 segment 计算与所有 diarization turn 的<strong>时间重叠</strong>，取重叠最长的那个作为 speaker 标签。重叠为 0 时保持 <code>None</code> —— <strong>绝不</strong>就近赋值或猜测。</p>
+
+<pre><code><span class="c"># tools/transcript_normalizer.py</span>
+<span class="k">def</span> _merge_diarization(transcript, turns):
+    <span class="k">for</span> seg <span class="k">in</span> transcript.segments:
+        best_overlap, best_speaker = <span class="n">0.0</span>, <span class="a">None</span>
+        <span class="k">for</span> start, end, spk <span class="k">in</span> parsed_turns:
+            overlap = <span class="k">max</span>(<span class="n">0</span>, <span class="k">min</span>(seg.end, end) - <span class="k">max</span>(seg.start, start))
+            <span class="k">if</span> overlap &gt; best_overlap:
+                best_overlap, best_speaker = overlap, spk
+        <span class="k">if</span> best_speaker <span class="k">and</span> best_overlap &gt; <span class="n">0</span>:
+            seg.speaker = best_speaker   <span class="c"># overlap 为 0 时不赋</span></code></pre>
+
+            <div class="notice">
+              <strong>真实运行回到这里：</strong> 我们这条录音的 <code>segments=[]</code>，turns 也没有，所以 <code>diarization=false</code>，下游所有 "按 speaker 拆分" 的输出都会被拒绝（见 STEP 5 的安全机制）。
+            </div>
+          </div>
         </div>
 
         <!-- STEP 4: CLASSIFY -->
-        <div class="demo-step">
+        <div class="demo-step" data-step="classify" data-requires="normalize">
           <div class="step-head">
             <span class="step-num">STEP 4</span>
             <h3 class="step-title">classify — 这是哪种录音？</h3>
+            <button class="step-btn" data-action="run-step" data-target="classify" disabled>▶ 分类内容</button>
           </div>
           <p class="step-desc">按 <code>prompts/classify_audio_content.md</code> 的契约，输出严格 JSON。下面是 LLM 应用该 prompt 后的真实输出。</p>
+          <div class="step-output">
+            <p class="elapsed">⏱ <span data-elapsed></span></p>
 <pre><code>{
   <span class="k">"label"</span>:        <span class="s">"casual_discussion"</span>,
   <span class="k">"confidence"</span>:   <span class="n">0.55</span>,
@@ -179,74 +278,38 @@
   <span class="k">"alternative_label"</span>:      <span class="s">"advisor_student_discussion"</span>,
   <span class="k">"alternative_confidence"</span>: <span class="n">0.42</span>
 }</code></pre>
+          </div>
         </div>
 
         <!-- STEP 5: SAFETY BRANCH -->
-        <div class="demo-step">
+        <div class="demo-step" data-step="safety" data-requires="classify">
           <div class="step-head">
             <span class="step-num">STEP 5</span>
             <h3 class="step-title">safety branch — 不确定时<em>问</em>，不要猜</h3>
+            <button class="step-btn" data-action="run-step" data-target="safety" disabled>▶ 触发安全机制</button>
           </div>
           <p class="step-desc">置信度 0.55 &lt; 阈值 0.6，且 <code>segments</code> 为空（无法引用时间戳）。skill 不硬套 preset，按 <code>prompts/ask_followup.md</code> 弹菜单：</p>
+          <div class="step-output">
+            <div class="ask-message">
+              <p>我已完成转写（约 <strong>1m0s</strong>，<strong>1 段</strong>）。</p>
+              <p>这段录音看起来更像 <strong class="accent">一次临时讨论</strong>，置信度 <strong class="warn">0.55（偏低）</strong>。</p>
+              <p>你希望我怎么处理？</p>
+            </div>
 
-<pre><code>我已完成转写（约 1m0s，1 段）。
-这段录音看起来更像 <span class="a">一次临时讨论</span>，置信度 <span class="w">0.55（偏低）</span>。
+            <div class="choice-menu">
+              <button class="choice" data-choice="A">A. 只整理全文转写</button>
+              <button class="choice" data-choice="B">B. 总结核心观点</button>
+              <button class="choice" data-choice="C">C. 提取待办事项</button>
+              <button class="choice" data-choice="D">D. 按参与人拆分任务</button>
+              <button class="choice" data-choice="E">E. 生成消息草稿（先审查）</button>
+              <button class="choice" data-choice="F">F. 自定义</button>
+            </div>
 
-你希望我怎么处理？
+            <p class="choice-hint">↑ 上面的按钮真的可以点。试试看选不同选项时 skill 给出的不同响应 —— 特别注意 D 和 E 会被拒绝。</p>
 
-  A. 只整理全文转写
-  B. 总结核心观点
-  C. 提取待办事项
-  D. 按参与人拆分任务
-  E. 生成可发送给他人的消息草稿
-     <span class="w">（**会先给你审查，不会自动发送**）</span>
-  F. 自定义处理方式（请告诉我具体目标）
-
-附加问题（可选回答）：
-  - 这段录音里只有一位说话人，还是有多人？
-    我没拿到 diarization 数据。
-  - 是否有保密要求？我可以避免把全文写入任何对外消息草稿。</code></pre>
-
-          <div class="notice">
-            <strong>注意一个隐含的拒绝：</strong> 即使你接下来选 D 或 E，由于 <code>segments=[]</code>，skill 仍会拒绝输出。<code>prompts/extract_tasks.md</code> 和 <code>prompts/build_student_messages.md</code> 都要求每条任务 / 草稿附时间戳引文 —— 这条硬规则在 prompt 和 settings 两层冗余，单靠"被说服"绕不过去。
-          </div>
-        </div>
-
-        <!-- STEP 6: USER PICKS B → SUMMARY -->
-        <div class="demo-step">
-          <div class="step-head">
-            <span class="step-num">STEP 6</span>
-            <h3 class="step-title">假设用户选 B：总结核心观点</h3>
-          </div>
-          <p class="step-desc">B 不依赖时间戳引文，可以执行。下面是 LLM 按 <code>casual_discussion</code> preset 输出的内容（节选）：</p>
-<pre><code><span class="c"># 临时讨论整理（节选）</span>
-
-<span class="k">## 一、讨论背景</span>
-
-  说话人正在反思一项工作的"测了什么"以及"相比其他工作的完备性"，
-  并就该工作对应论文的写作组织方式提出批评。
-
-<span class="k">## 二、核心观点</span>
-
-  - "测了什么 / 我们测了什么"是核心问题：当前结果尚未清楚回答
-    "我们与其他工作在哪些维度上更完备"。
-  - 当前论文的写作组织偏松散，缺少一张明确的对比维度表，导致
-    论述"随机又走了"，读者难以抓住主线。
-
-<span class="k">## 四、未解决问题</span>
-
-  - 究竟用哪些维度作为"更完备"的衡量标准？录音中未明确。
-  - 论文的当前写作框架是否需要重写？讨论提到了缺陷，未决断。
-
-<span class="k">## 五、下一步行动 <span class="w">（建议，待确认）</span></span>
-
-  <span class="w">> 这部分是模型基于讨论内容的整理（推测），不是会议中明确</span>
-  <span class="w">> 交代的任务。是否纳入待办，请你确认。</span>
-
-  - <span class="w">（推测）</span>先把"对比维度表"补齐再写正文，否则论述顺序容易回退。
-  - <span class="w">（推测）</span>把"我们和别人的完备性差异"作为论文 §1 的锚点。</code></pre>
-          <div class="notice">
-            <strong>叙事完整性：</strong> 输出里所有"建议 / 下一步"全部带 <code>（推测）</code> 标记 —— 因为录音原话只点出问题，没给出建议；下游读者很容易把模型补的建议当成"录音里的结论"，所以必须显式区分。
+            <div class="choice-output" id="choice-output">
+              <p class="choice-placeholder">点上面任一选项查看 skill 的响应 →</p>
+            </div>
           </div>
         </div>
 
@@ -285,8 +348,8 @@
             <p class="label-cn">学生进展汇报</p>
             <p class="desc">学生汇报上周工作。输出已完成事项、当前问题、需要导师反馈的点。</p>
           </div>
-          <div class="preset-card" style="border-color: var(--warn);">
-            <p class="name" style="color: var(--warn);">unknown</p>
+          <div class="preset-card unknown">
+            <p class="name">unknown</p>
             <p class="label-cn">不确定</p>
             <p class="desc">置信度 &lt; 0.6 时不硬套模板，弹 A–F 菜单让用户选。这一项是这个 skill 的灵魂。</p>
           </div>
@@ -402,5 +465,6 @@ export ASR_API_KEY=sk-...
     </div>
   </footer>
 
+  <script src="app.js"></script>
 </body>
 </html>
