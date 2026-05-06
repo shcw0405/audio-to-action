@@ -1,0 +1,83 @@
+{
+  "classify": {
+    "content": "{\"label\":\"voice_memo\",\"confidence\":0.65,\"rationale\":\"全文为单段落、无交替说话人痕迹；内容以自问自答呈现（'你自己这个表其实不换论文'、'我这个又变成了'），属于对自身的提醒与指令，符合 voice_memo 的自我独白特征。\",\"alternative_label\":\"unknown\",\"alternative_confidence\":0.30}",
+    "raw_content": "<think>Let me analyze this ASR transcript:\n\n```\n是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。\n```\n\nThis is a very short transcript - just one continuous block of text with no speaker segmentation, no timestamps, and no diarization.\n\nLet me classify:\n\n1. **Speaker count**: The transcript appears to be from a single speaker (all one block of text, no alternating patterns). This suggests `voice_memo` or `student_progress_report`.\n\n2. **Content analysis**:\n   - \"是测了什么？我们测了什么，对吧？\" - asking what was tested\n   - \"我比别人更完备的在哪些地方？\" - asking about what is more complete compared to others\n   - \"你自己这个表其实不换论文\" - seems like self-directed speech, telling themselves something\n   - \"你这个得有知道\" - telling themselves to know something\n   - \"要不然现在就是你不是一个按照论文的作文方式去做\" - self-instruction\n   - \"因为现在就又随机又走了\" - seems like self-reflection\n   - \"嗯，我现在又变成了，那我。\" - self-addressing\n\nThe speaker is clearly talking to themselves, giving themselves instructions and reminders. This is characteristic of `voice_memo`.\n\n3. **Length**: The transcript is very short - just one paragraph. This is borderline for classification.\n\n4. **Task assignment density**: There are some self-instructions (\"得有知道\", \"不换论文\"), but they're directed at the self, not to another person.\n\n5. **Decision**: This is a single speaker addressing themselves with self-instructions and self-questions. This fits `voice_memo` best.\n\nHowever, the transcript is quite short and fragmented. The confidence should be adjusted accordingly.\n\nWait, let me reconsider. The transcript is very short and fragmented. \n\nThe self-addressing pattern is unmistakable - phrases like \"你自己这个表\" and \"我现在又变成了\" are clearly directed inward. Even though the content touches on research methodology and testing approaches, the fragmented, self-directed nature of the speech points most strongly to `voice_memo`. Given the brevity and lack of clear structure, I'll assign a confidence of 0.65, acknowledging the uncertainty while maintaining the classification.\n</think>\n\n{\"label\":\"voice_memo\",\"confidence\":0.65,\"rationale\":\"全文为单段落、无交替说话人痕迹；内容以自问自答呈现（'你自己这个表其实不换论文'、'我这个又变成了'），属于对自身的提醒与指令，符合 voice_memo 的自我独白特征。\",\"alternative_label\":\"unknown\",\"alternative_confidence\":0.30}",
+    "elapsed_s": 8.3,
+    "usage": {
+      "prompt_tokens": 906,
+      "total_tokens": 1476,
+      "completion_tokens": 570,
+      "prompt_tokens_details": null
+    }
+  },
+  "A": {
+    "content": "是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道。要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。",
+    "raw_content": "<think>用户提供了原始 ASR 输出，没有 segments、没有时间戳、没有 speaker diarization。用户要求：\n1. 清理版本，去填充词、整理标点、合并段落\n2. 不要输出 [SPEAKER_xx | mm:ss] 形式的标头\n3. 直接输出纯净的 markdown 段落\n4. 不要加 markdown 围栏\n\n原始 ASR 文本：\n\"是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。\"\n\n分析这段话：\n- \"是测了什么？我们测了什么，对吧？\" - 问句，询问测试内容\n- \"我比别人更完备的在哪些地方？\" - 询问自己比别人更完备的地方\n- \"你自己这个表其实不换论文，你这个得有知道\" - 这句有点乱，可能是\"你自己这个表其实不换论文，你这个得有知道\"（意思是你自己这个表其实不换论文，你这个得有知道），或者有 ASR 错误\n- \"要不然现在就是你不是一个按照论文的作文方式去做\" - 解释原因\n\n\n- \"因为现在就又随机又走了\" - 解释原因\n- \"嗯，我现在又变成了，那我。\" - 语气词和未完成的话\n\n清理后的版本：\n\"是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道。要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。\"\n\n我注意到这段话似乎是在讨论论文写作或测试相关的内容。说话者似乎在强调论文写作的规范性和完整性，语气中带有一些不确定和建议的意味。\n</think>\n\n是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道。要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。",
+    "elapsed_s": 6.1,
+    "usage": {
+      "prompt_tokens": 742,
+      "total_tokens": 1152,
+      "completion_tokens": 410,
+      "prompt_tokens_details": null
+    }
+  },
+  "B": {
+    "content": "# casual_discussion 报告\n\n## 一、讨论背景\n\n这是一段关于某项测试或研究工作的讨论。说话者似乎在询问测试的具体内容，并将其与他人进行比较，同时涉及论文写作方式的话题。（推测）可能是在学术研究或项目开发过程中，对工作成果的梳理和讨论。\n\n## 二、核心观点\n\n- 说话者强调需要明确\"测了什么\"，并追问与他人相比自己工作的完备性体现在哪些地方\n- 指出对方需要清楚了解自己的成果，不能仅凭感觉或随意方式进行\n- 强调应当按照论文的规范方式来进行工作梳理和呈现\n- 提到当前状态\"又随机又走了\"，暗示工作缺乏系统性\n\n## 三、达成共识\n\n- 需要明确测试的具体内容和范围\n- 需要梳理自己工作相比他人的优势所在\n- 应该采用规范的论文写作方式进行整理\n\n## 四、未解决问题\n\n- 具体测试了哪些内容尚未明确\n- \"更完备\"的具体方面未详细说明\n- 当前工作状态是否已符合论文规范的要求未达成一致\n\n## 五、下一步行动\n\n- 明确列出测试的具体项目和内容\n- 梳理并总结自己工作的独特价值和完备性\n- 按照论文写作的规范方式重新整理工作成果",
+    "raw_content": "<think>The user has provided a transcription of a casual discussion. They want me to output a markdown report following a specific \"casual_discussion\" preset with five sections:\n1. 讨论背景 (Discussion Background)\n2. 核心观点 (Core Points)\n3. 达成共识 (Consensus Reached)\n4. 未解决问题 (Unresolved Issues)\n5. 下一步行动 (Next Steps)\n\nThe transcription is quite fragmented and unclear. Let me analyze what I can understand:\n\n\"是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。\n\n</think>\n\n# casual_discussion 报告\n\n## 一、讨论背景\n\n这是一段关于某项测试或研究工作的讨论。说话者似乎在询问测试的具体内容，并将其与他人进行比较，同时涉及论文写作方式的话题。（推测）可能是在学术研究或项目开发过程中，对工作成果的梳理和讨论。\n\n## 二、核心观点\n\n- 说话者强调需要明确\"测了什么\"，并追问与他人相比自己工作的完备性体现在哪些地方\n- 指出对方需要清楚了解自己的成果，不能仅凭感觉或随意方式进行\n- 强调应当按照论文的规范方式来进行工作梳理和呈现\n- 提到当前状态\"又随机又走了\"，暗示工作缺乏系统性\n\n## 三、达成共识\n\n- 需要明确测试的具体内容和范围\n- 需要梳理自己工作相比他人的优势所在\n- 应该采用规范的论文写作方式进行整理\n\n## 四、未解决问题\n\n- 具体测试了哪些内容尚未明确\n- \"更完备\"的具体方面未详细说明\n- 当前工作状态是否已符合论文规范的要求未达成一致\n\n## 五、下一步行动\n\n- 明确列出测试的具体项目和内容\n- 梳理并总结自己工作的独特价值和完备性\n- 按照论文写作的规范方式重新整理工作成果",
+    "elapsed_s": 5.8,
+    "usage": {
+      "prompt_tokens": 162,
+      "total_tokens": 562,
+      "completion_tokens": 400,
+      "prompt_tokens_details": null
+    }
+  },
+  "C": {
+    "content": "### 临时-1（待确认收件人）\n\n- 任务：梳理自身工作与\"别人\"工作的差异，明确\"更完备\"的维度体现在哪些地方\n- 交付物：对比说明文档（形式未明确）\n- 截止时间：未明确（推测：下次讨论前）\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"我比别人更完备的在哪些地方？\"\n- 不确定项：说话人身份不明；\"别人\"具体指谁或哪篇工作未说明\n\n### 临时-2（待确认收件人）\n\n- 任务：检查当前工作是否按照论文的写作方式组织，确保结构不松散\n- 交付物：结构化论文草稿或大纲（形式未明确）\n- 截止时间：未明确（推测：近期）\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。\"\n- 不确定项：说话人身份不明；当前工作处于什么阶段（草稿 / 初稿）未说明\n\n### 临时-3（待确认收件人）\n\n- 任务：明确表格（或图）在论文中的定位，确保其不因论文结构调整而被随意替换\n- 交付物：未明确（推测：表格的规范使用说明或位置确认）\n- 截止时间：未明确\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"你自己这个表其实不换论文，你这个得有知道\"\n- 不确定项：说话人身份不明；\"表\"具体指哪个表格未说明；\"不换论文\"含义模糊（推测指表格不应随论文其他部分改动而被替换）\n\n---\n\n> **说明：** 本段录音高度碎片化，语义连贯性较差。上述任务均为基于片段的**推测性提取**，多处关键信息（说话人身份、具体指代、截止时间）均无法确认，建议与说话人当面核实后再作为正式待办下发。",
+    "raw_content": "<think>Let me analyze this transcript carefully.\n\nThe transcript is:\n\"是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。\"\n\nThis is a very fragmented, unclear transcript. Let me try to understand what's being said:\n\n- \"是测了什么？我们测了什么，对吧？\" - \"What did we test? What did we test, right?\"\n\n\n- \"我比别人更完备的在哪些地方？\" - \"In what ways am I more complete/comprehensive than others?\"\n- \"你自己这个表其实不换论文，你这个得有知道\" - This is quite garbled, but seems to be about \"your table/figure should not change the paper, you need to know this\"\n- \"要不然现在就是你不是一个按照论文的作文方式去做\" - \"Otherwise now you're not doing it in a paper-like writing style\"\n- \"因为现在就又随机又走了\" - \"Because now it's random and goes all over the place\"\n- \"嗯，我现在又变成了，那我。\" - \"Um, now I've become, then I...\"\n\nThe transcript is quite fragmented and hard to follow, but it seems like someone is discussing the completeness of their testing compared to others, and expressing concern about whether the work is being presented in a proper academic paper format rather than something more scattered or informal.\n\nLooking at the actual tasks embedded in this, there's a question about what was tested and how it compares to other approaches, which suggests someone needs to clarify the experimental methodology and results. There's also a reference to a table or figure that apparently shouldn't be changed, which implies there's a specific format or constraint being discussed. The overall concern seems to be about maintaining a structured, paper-like approach to the work rather than letting it become too random or disorganized. I'm working through the speaker's fragmented thoughts about their paper structure and methodology. The core issue seems to be that the work has become disorganized and lacks a clear paper-like format, so there's a need to clarify what was actually tested and how it compares to existing approaches. The speaker is questioning whether the current presentation follows proper academic conventions, and there's an underlying concern about maintaining rigor while being more systematic in the writing.\n</think>\n\n### 临时-1（待确认收件人）\n\n- 任务：梳理自身工作与\"别人\"工作的差异，明确\"更完备\"的维度体现在哪些地方\n- 交付物：对比说明文档（形式未明确）\n- 截止时间：未明确（推测：下次讨论前）\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"我比别人更完备的在哪些地方？\"\n- 不确定项：说话人身份不明；\"别人\"具体指谁或哪篇工作未说明\n\n### 临时-2（待确认收件人）\n\n- 任务：检查当前工作是否按照论文的写作方式组织，确保结构不松散\n- 交付物：结构化论文草稿或大纲（形式未明确）\n- 截止时间：未明确（推测：近期）\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。\"\n- 不确定项：说话人身份不明；当前工作处于什么阶段（草稿 / 初稿）未说明\n\n### 临时-3（待确认收件人）\n\n- 任务：明确表格（或图）在论文中的定位，确保其不因论文结构调整而被随意替换\n- 交付物：未明确（推测：表格的规范使用说明或位置确认）\n- 截止时间：未明确\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"你自己这个表其实不换论文，你这个得有知道\"\n- 不确定项：说话人身份不明；\"表\"具体指哪个表格未说明；\"不换论文\"含义模糊（推测指表格不应随论文其他部分改动而被替换）\n\n---\n\n> **说明：** 本段录音高度碎片化，语义连贯性较差。上述任务均为基于片段的**推测性提取**，多处关键信息（说话人身份、具体指代、截止时间）均无法确认，建议与说话人当面核实后再作为正式待办下发。",
+    "elapsed_s": 12.8,
+    "usage": {
+      "prompt_tokens": 1066,
+      "total_tokens": 1962,
+      "completion_tokens": 896,
+      "prompt_tokens_details": null
+    }
+  },
+  "D": {
+    "content": "### SPEAKER_01\n\n- 任务：梳理并明确\"我们测了什么\"，形成可与他人对比的完整测试说明\n- 交付物：测试内容说明（形式未明确，可能是表格、文档或 PPT 片段）\n- 截止时间：未明确（推测：下次讨论前）\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"是测了什么？我们测了什么，对吧？\"\n- 不确定项：\n  - 收件人仅以 `SPEAKER_01` 占位，无法确认具体姓名\n  - 无时间戳，任务边界依赖推测\n  - 交付物形式未说明\n\n---\n\n### 临时-1（推测为被指导的学生）\n\n- 任务：明确自身工作相较于他人的\"更完备\"之处，并按论文写作规范整理\n- 交付物：未明确（推测为论文或对比说明文档）\n- 截止时间：未明确\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"我比别人更完备的在哪些地方？\"；\"你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做\"\n- 不确定项：\n  - 收件人姓名未知，以 `临时-1` 占位\n  - \"表\"具体指什么（实验数据表 / 对比表格 / 其他）未明确\n  - 任务是否已分配给 SPEAKER_01 以外的其他人无法确认\n\n---\n\n### 整体说明\n\n本次转写极短且碎片化，任务边界不清晰。上述两项均为**推测性任务**，依据仅为片段中的语义关联。建议与 SPEAKER_01 或相关参与者确认具体任务内容与截止时间。",
+    "raw_content": "<think>Let me analyze this transcript carefully.\n\nThe transcript is very short and fragmented. Let me try to understand what's being said:\n\n\"是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。\"\n\nThis seems like a fragmented conversation. Let me try to parse it:\n\n- \"是测了什么？我们测了什么，对吧？\" - \"What did we test? What did we test, right?\"\n\n\n- \"我比别人更完备的在哪些地方？\" - \"In what ways am I more complete than others?\"\n- \"你自己这个表其实不换论文，你这个得有知道\" - This is quite garbled, but seems to be addressing someone about a table/form that doesn't change the paper, and they need to know something\n- \"要不然现在就是你不是一个按照论文的作文方式去做\" - \"Otherwise now you're not doing it in a paper-style writing way\"\n- \"因为现在就又随机又走了\" - \"Because now it's random and gone\"\n- \"嗯，我现在又变成了，那我。\" - \"Um, now I've become again, then I...\"\n\nThe conversation appears to be a fragmented discussion about testing methodology and paper writing approach, with someone being told they need to understand something about their table or form. The speech is quite disjointed and trails off at the end.\n\nLooking at the context, this seems like a lab or advisor meeting where someone's being given feedback about their research approach. The speaker is asking what was tested, what makes their work more comprehensive than others, and pointing out that the current approach isn't following proper academic paper structure. There's also a mention of randomness and someone changing their approach.\n\nI'm trying to identify the actual tasks here, but the transcript is too fragmented to extract clear, actionable items. The conversation appears to be mid-thought with several incomplete sentences, making it difficult to determine what specific deliverables or actions are being requested. I need to be transparent about what I can and cannot extract from this recording. The transcript is too fragmented to identify specific tasks with confidence, so I'll mark everything as uncertain and provide what context I can infer from the fragments.\n</think>\n\n### SPEAKER_01\n\n- 任务：梳理并明确\"我们测了什么\"，形成可与他人对比的完整测试说明\n- 交付物：测试内容说明（形式未明确，可能是表格、文档或 PPT 片段）\n- 截止时间：未明确（推测：下次讨论前）\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"是测了什么？我们测了什么，对吧？\"\n- 不确定项：\n  - 收件人仅以 `SPEAKER_01` 占位，无法确认具体姓名\n  - 无时间戳，任务边界依赖推测\n  - 交付物形式未说明\n\n---\n\n### 临时-1（推测为被指导的学生）\n\n- 任务：明确自身工作相较于他人的\"更完备\"之处，并按论文写作规范整理\n- 交付物：未明确（推测为论文或对比说明文档）\n- 截止时间：未明确\n- 验收标准：未明确（待确认）\n- 依据：录音中段：\"我比别人更完备的在哪些地方？\"；\"你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做\"\n- 不确定项：\n  - 收件人姓名未知，以 `临时-1` 占位\n  - \"表\"具体指什么（实验数据表 / 对比表格 / 其他）未明确\n  - 任务是否已分配给 SPEAKER_01 以外的其他人无法确认\n\n---\n\n### 整体说明\n\n本次转写极短且碎片化，任务边界不清晰。上述两项均为**推测性任务**，依据仅为片段中的语义关联。建议与 SPEAKER_01 或相关参与者确认具体任务内容与截止时间。",
+    "elapsed_s": 11.6,
+    "usage": {
+      "prompt_tokens": 1063,
+      "total_tokens": 1880,
+      "completion_tokens": 817,
+      "prompt_tokens_details": null
+    }
+  },
+  "E": {
+    "content": "### 发给 SPEAKER_01\n\n**消息草稿：**\n\n同学你好，导师在讨论中强调，你需要明确自己做了哪些测试，并与已有工作对比，突出自己的完备性所在。另外请按论文规范整理相关表格和数据，确保思路清晰完整。如有疑问可以随时沟通。\n\n**依据：**\n- 录音中段：我们测了什么，对吧？我比别人更完备的在哪些地方？\n- 录音中段：你这个表其实不换论文，你这个得有知道\n- 录音中段：不是一个按照论文的作文方式去做\n\n**不确定项：**\n- 收件人真实身份未确认（SPEAKER_01 → ?）— 请确认对应姓名后再发送\n- 具体截止时间未提及 — 如有需要可补充",
+    "raw_content": "<think>用户要求我根据一段没有时间戳、没有说话人识别的 ASR 转写文本，生成一份消息草稿。\n\n让我先理解这段转写的内容：\n\n\"是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。\"\n\n这段话听起来像是导师在指导学生关于研究/论文的事情：\n- 问\"测了什么\"——关于实验测试\n- \"我比别人更完备的在哪些地方\"——强调要清楚自己的创新点/优势\n- \"你自己这个表其实不换论文\"——可能是说表格/数据要符合论文规范\n- \"你得有知道\"——学生需要清楚这些\n\n\n- \"不是一个按照论文的作文方式去做\"——批评学生没有按论文的规范来\n- \"现在又随机又走了\"——可能指思路/方法不够系统\n- \"我现在又变成了\"——表达一种无奈或困惑\n\n整体来看，这像是导师在指出学生在论文写作或研究方法上存在的问题，要求学生明确自己的实验内容和创新点。\n\n现在需要生成一份消息草稿给 SPEAKER_01（收件人未知），内容涉及：明确实验测试内容、阐述自己的创新点和优势、按照论文规范整理数据和表格、确保思路的系统性和完整性。草稿应该用中文，2-5 句话，包含依据和不确定项。\n</think>\n\n### 发给 SPEAKER_01\n\n**消息草稿：**\n\n同学你好，导师在讨论中强调，你需要明确自己做了哪些测试，并与已有工作对比，突出自己的完备性所在。另外请按论文规范整理相关表格和数据，确保思路清晰完整。如有疑问可以随时沟通。\n\n**依据：**\n- 录音中段：我们测了什么，对吧？我比别人更完备的在哪些地方？\n- 录音中段：你这个表其实不换论文，你这个得有知道\n- 录音中段：不是一个按照论文的作文方式去做\n\n**不确定项：**\n- 收件人真实身份未确认（SPEAKER_01 → ?）— 请确认对应姓名后再发送\n- 具体截止时间未提及 — 如有需要可补充",
+    "elapsed_s": 7.0,
+    "usage": {
+      "prompt_tokens": 1336,
+      "total_tokens": 1791,
+      "completion_tokens": 455,
+      "prompt_tokens_details": null
+    }
+  },
+  "_meta": {
+    "model": "minimax-m27-gw",
+    "endpoint": "https://uni-api.cstcloud.cn/v1/chat/completions",
+    "captured_at": "2026-05-06T07:23:21Z",
+    "transcript": "是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。",
+    "transcript_chars": 100,
+    "captured_keys": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "classify"
+    ]
+  }
+}

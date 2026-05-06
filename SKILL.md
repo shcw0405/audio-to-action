@@ -289,32 +289,75 @@ When the skill drafts a message to a specific person (preset 1 §四, preset 2
 
 Hard rules:
 
-- Never send. Only draft.
-- Never address the recipient by a name that was not stated in the recording
-  or supplied by the user.
-- If a draft cites a deadline, the deadline must have a citation. If
-  inferred, mark it `（推测，待确认）`.
-- Full transcripts are **not** included in drafts. Only the relevant excerpt
-  cited as 依据.
+- **Never auto-send.** Drafts are produced; the user clicks 发送 explicitly.
+- If you don't know the recipient's real name, use the best label you have
+  (`SPEAKER_xx` from diarization, or `临时-N`) and flag in 不确定项 — do
+  **not** silently fabricate a name.
+- If a draft cites a deadline, prefer to cite an excerpt; if the deadline
+  is inferred, mark it `（推测，待确认）`.
+- By default, don't include the full transcript in a per-person draft —
+  cite the relevant excerpts. The user can request the full text.
 
 ---
 
-## 8. Safety rules (non-negotiable)
+## 8. Operating posture & rules
 
-1. **Do not invent speaker identities.** `SPEAKER_01` stays `SPEAKER_01`
-   until the user maps it.
-2. **Do not invent students, deadlines, or task ownership.** If a piece of
-   information is implied but not stated, mark it `（推测）`.
-3. **Do not auto-send anything.** The skill produces drafts; sending is a
-   separate, explicit, user-approved action outside this skill.
-4. **Do not leak full transcripts** into person-specific drafts. Only cite the
-   relevant excerpts.
-5. **Do not retain audio or transcripts beyond the run** unless the user asked
-   you to save them. If you do save, save next to the source file or under
-   `./out/` and tell the user the path.
-6. **API keys** come from environment variables named in `settings.yaml`
-   (`api_key_env: ASR_API_KEY`). Never hardcode. Never echo the key back.
-7. When unsure, **ask** (see §5). Silent defaults are worse than a question.
+The skill's posture is **serve, then surface**. Do the work the user asked
+for. When data is missing or implied, mark the gap explicitly inside the
+output rather than refusing to produce output. The user is the
+human-in-the-loop; your job is fidelity + clarity, not gate-keeping.
+
+That said, two boundaries are real:
+
+### 8.1 The one hard rule — confirmed send
+
+**Outbound communication requires an explicit user click after the draft
+is shown.** The skill produces drafts; sending happens through a
+separate UI affordance the user has to actuate. There is no path where
+the model "decides to send" in one shot. This is the *only* refuse-style
+rule the skill enforces, because sending is irreversible.
+
+In practice: messages, emails, Slack/Lark/微信 posts, calendar invites,
+PR comments — anything that touches the outside world — must surface a
+"draft → confirm → send" flow.
+
+### 8.2 The honesty rules — keep what you don't know visible
+
+These shape *how* you produce output, not *whether*:
+
+1. **Don't silently fabricate identities.** If you don't know the
+   speaker's name, use a placeholder (`SPEAKER_01`, `临时-1`) and flag
+   it in 不确定项. Don't invent "张同学" out of thin air.
+2. **Mark inferred information.** Recommendations, deadlines you
+   guessed, owners that were implied — wrap them in `（推测）` or
+   `（待确认）` so a reviewer can tell stated from inferred at a
+   glance.
+3. **Don't invent verbatim quotes.** If you cite, cite from the
+   transcript. If you paraphrase, don't put quotation marks around it.
+4. **By default, don't dump the full transcript into per-person
+   drafts** — cite the relevant excerpts only. The user can ask for
+   the full transcript if they want it.
+5. **Don't retain audio or transcripts beyond the run** unless the
+   user asked. If you save artifacts, save them next to the source
+   file or under `./out/` and tell the user the path.
+6. **API keys come from env vars** named in `settings.yaml`. Never
+   hardcode. Never echo a key back in any output.
+
+### 8.3 What is NOT a refusal trigger
+
+To be explicit about what changed: missing metadata is *not* a reason
+to withhold output. Examples:
+
+- ASR didn't return segments → still produce tasks/drafts; cite by
+  paragraph or by quoted excerpt; mark "no precise timestamps
+  available" in 不确定项.
+- Diarization didn't run → still produce per-person tasks/drafts;
+  use `SPEAKER_xx` or `临时-N` placeholders; flag in 不确定项.
+- Confidence on classification is borderline → still produce *some*
+  output; pair it with the A–F menu so the user can redirect.
+
+The user is the one with veto power. Your job is to produce output
+that's easy for them to review, edit, and approve.
 
 ---
 

@@ -804,6 +804,268 @@ p {
   border-radius: 3px;
 }
 
+/* ---------- rendered LLM markdown output ---------- */
+
+.llm-output {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin: 12px 0;
+}
+
+.llm-output h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 18px 0 8px;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.llm-output h3:first-child {
+  margin-top: 0;
+}
+
+.llm-output h4 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 16px 0 6px;
+  color: var(--text);
+}
+
+.llm-output h5 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 12px 0 6px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.llm-output p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.llm-output ul {
+  padding-left: 20px;
+  margin: 6px 0 12px;
+}
+
+.llm-output li {
+  margin: 4px 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.llm-output blockquote {
+  border-left: 3px solid var(--text-faint);
+  padding: 4px 14px;
+  margin: 12px 0;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-dim);
+  font-size: 13px;
+  border-radius: 0 4px 4px 0;
+}
+
+.llm-output blockquote p {
+  margin: 4px 0;
+}
+
+.llm-output hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+.llm-output code {
+  font-size: 12.5px;
+}
+
+.llm-output strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ---------- E: send flow ---------- */
+
+.send-flow {
+  margin: 16px 0 0;
+}
+
+.draft-display {
+  background: rgba(0, 212, 170, 0.04);
+  border-color: var(--accent-dim);
+}
+
+.send-bar {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.send-warn {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+.send-btn {
+  background: var(--accent);
+  color: #001f1a;
+  border: 1px solid transparent;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font: 600 14px/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+
+.send-btn:hover {
+  background: #2eebbf;
+  transform: translateY(-1px);
+}
+
+/* ---------- confirm overlay ---------- */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.confirm-dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px 28px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: dialogIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dialogIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.confirm-dialog h4 {
+  margin: 0 0 14px;
+  font-size: 18px;
+  color: var(--warn);
+}
+
+.confirm-dialog p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.confirm-buttons button {
+  padding: 9px 18px;
+  border-radius: 6px;
+  font: 600 13px/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.confirm-buttons .cancel {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+.confirm-buttons .cancel:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.confirm-buttons .confirm {
+  background: var(--accent);
+  color: #001f1a;
+  border: 1px solid transparent;
+}
+
+.confirm-buttons .confirm:hover {
+  background: #2eebbf;
+}
+
+/* ---------- post-send indicator ---------- */
+
+.sent-indicator {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 14px;
+  align-items: start;
+  background: rgba(0, 212, 170, 0.08);
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 16px 0 0;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.sent-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #001f1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.sent-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.sent-detail {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.sent-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
 /* ---------- code blocks ---------- */
 
 pre {

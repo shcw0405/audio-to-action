@@ -114,7 +114,8 @@
             <dt>大小</dt><dd>1,921,102 bytes (1.83 MB)</dd>
             <dt>时长</dt><dd>60.13 s</dd>
             <dt>ASR backend</dt><dd>local Doubao @ 127.0.0.1:8836，无 auth</dd>
-            <dt>处理用时</dt><dd>72 s（≈ 0.83× 实时；下面的动画压缩到 ~1.5s）</dd>
+            <dt>LLM backend</dt><dd>minimax-m27-gw via uni-api.cstcloud.cn (推理模型，输出剥离 &lt;think&gt; 块)</dd>
+            <dt>ASR 用时</dt><dd>72 s（≈ 0.83× 实时；动画压缩到 ~1.6s）</dd>
           </dl>
         </div>
 
@@ -159,7 +160,7 @@
   <span class="c">// note: no "segments" key — this server doesn't emit them</span>
 }</code></pre>
             <div class="notice">
-              <strong>关键发现：</strong> 这个 endpoint 不返回 <code>segments</code> 数组，只给 <code>text</code>。普通 ASR wrapper 到这里就结束 —— 但 skill 的下游会因此<strong>触发安全机制</strong>。这不是 bug，是<em>设计</em>。
+              <strong>关键发现：</strong> 这个 endpoint 不返回 <code>segments</code> 数组，只给 <code>text</code>。普通 ASR wrapper 到这里就结束 —— skill 这边下游会知道 <code>segments=[]</code>，下面的任务和草稿都会用 <em>"录音中段"</em> 代替 <code>mm:ss</code> 引文，但<strong>仍然照常输出</strong>。"先服务，再标注"。
             </div>
           </div>
         </div>
@@ -256,7 +257,7 @@
             seg.speaker = best_speaker   <span class="c"># overlap 为 0 时不赋</span></code></pre>
 
             <div class="notice">
-              <strong>真实运行回到这里：</strong> 我们这条录音的 <code>segments=[]</code>，turns 也没有，所以 <code>diarization=false</code>，下游所有 "按 speaker 拆分" 的输出都会被拒绝（见 STEP 5 的安全机制）。
+              <strong>真实运行回到这里：</strong> 我们这条录音的 <code>segments=[]</code>，turns 也没有，所以 <code>diarization=false</code>。下游"按 speaker 拆分"的输出仍会照常生成 —— 用 <code>SPEAKER_01</code> / <code>临时-N</code> 占位符，并在不确定项里标"待确认收件人"。决定权交给用户，不替用户拒绝。
             </div>
           </div>
         </div>
@@ -266,49 +267,42 @@
           <div class="step-head">
             <span class="step-num">STEP 4</span>
             <h3 class="step-title">classify — 这是哪种录音？</h3>
-            <button class="step-btn" data-action="run-step" data-target="classify" disabled>▶ 分类内容</button>
+            <button class="step-btn" data-action="run-step" data-target="classify" disabled>▶ 调 LLM 分类</button>
           </div>
-          <p class="step-desc">按 <code>prompts/classify_audio_content.md</code> 的契约，输出严格 JSON。下面是 LLM 应用该 prompt 后的真实输出。</p>
+          <p class="step-desc">把转写文本 + <code>prompts/classify_audio_content.md</code> 一起发给 <code>minimax-m27-gw</code>，要求返回严格 JSON。下面是<strong>真实 LLM 输出</strong>，不是预先写好的字符串。</p>
           <div class="step-output">
             <p class="elapsed">⏱ <span data-elapsed></span></p>
-<pre><code>{
-  <span class="k">"label"</span>:        <span class="s">"casual_discussion"</span>,
-  <span class="k">"confidence"</span>:   <span class="n">0.55</span>,
-  <span class="k">"rationale"</span>:    <span class="s">"单人监督式自语 + 抽象的论文写作方法学批评，无明确任务分派、无具体截止时间；介于'临时讨论'与'导师独白'之间，故置信度偏低。"</span>,
-  <span class="k">"alternative_label"</span>:      <span class="s">"advisor_student_discussion"</span>,
-  <span class="k">"alternative_confidence"</span>: <span class="n">0.42</span>
-}</code></pre>
+<pre><code data-content="classify"><span class="c">// loading from docs/demo_responses.json ...</span></code></pre>
           </div>
         </div>
 
-        <!-- STEP 5: SAFETY BRANCH -->
-        <div class="demo-step" data-step="safety" data-requires="classify">
+        <!-- STEP 5: ROUTING (was: SAFETY BRANCH) -->
+        <div class="demo-step" data-step="route" data-requires="classify">
           <div class="step-head">
             <span class="step-num">STEP 5</span>
-            <h3 class="step-title">safety branch — 不确定时<em>问</em>，不要猜</h3>
-            <button class="step-btn" data-action="run-step" data-target="safety" disabled>▶ 触发安全机制</button>
+            <h3 class="step-title">route — 选输出形态</h3>
+            <button class="step-btn" data-action="run-step" data-target="route" disabled>▶ 展示菜单</button>
           </div>
-          <p class="step-desc">置信度 0.55 &lt; 阈值 0.6，且 <code>segments</code> 为空（无法引用时间戳）。skill 不硬套 preset，按 <code>prompts/ask_followup.md</code> 弹菜单：</p>
+          <p class="step-desc">分类置信度 <strong>0.65</strong> 在阈值上方 —— skill 默认会按 <code>voice_memo</code> preset 输出。但用户可以选 A–F 让 skill 用其他形式整理。<strong>无论选哪个，都会输出</strong>，不会因为缺时间戳 / 缺 diarization 就拒绝；不确定的字段会显式标 <code>（推测）</code> / <code>（待确认）</code>。</p>
           <div class="step-output">
             <div class="ask-message">
-              <p>我已完成转写（约 <strong>1m0s</strong>，<strong>1 段</strong>）。</p>
-              <p>这段录音看起来更像 <strong class="accent">一次临时讨论</strong>，置信度 <strong class="warn">0.55（偏低）</strong>。</p>
-              <p>你希望我怎么处理？</p>
+              <p>转写完毕（<strong>~1m0s</strong>，<strong>1 段</strong>）。skill 把它分到 <strong class="accent">voice_memo</strong>（置信度 0.65）。</p>
+              <p>你想要哪种输出？</p>
             </div>
 
             <div class="choice-menu">
-              <button class="choice" data-choice="A">A. 只整理全文转写</button>
+              <button class="choice" data-choice="A">A. 全文整理</button>
               <button class="choice" data-choice="B">B. 总结核心观点</button>
               <button class="choice" data-choice="C">C. 提取待办事项</button>
               <button class="choice" data-choice="D">D. 按参与人拆分任务</button>
-              <button class="choice" data-choice="E">E. 生成消息草稿（先审查）</button>
+              <button class="choice" data-choice="E">E. 生成消息草稿</button>
               <button class="choice" data-choice="F">F. 自定义</button>
             </div>
 
-            <p class="choice-hint">↑ 上面的按钮真的可以点。试试看选不同选项时 skill 给出的不同响应 —— 特别注意 D 和 E 会被拒绝。</p>
+            <p class="choice-hint">↑ 上面的按钮真的可以点 —— 每个选项都会触发对应的 LLM 输出（已用 <code>minimax-m27-gw</code> 提前生成，加载自 <code>demo_responses.json</code>）。E 会演示完整的"草稿 → 确认 → 发送"流程。</p>
 
             <div class="choice-output" id="choice-output">
-              <p class="choice-placeholder">点上面任一选项查看 skill 的响应 →</p>
+              <p class="choice-placeholder">点上面任一选项查看真实 LLM 响应 →</p>
             </div>
           </div>
         </div>
@@ -351,7 +345,7 @@
           <div class="preset-card unknown">
             <p class="name">unknown</p>
             <p class="label-cn">不确定</p>
-            <p class="desc">置信度 &lt; 0.6 时不硬套模板，弹 A–F 菜单让用户选。这一项是这个 skill 的灵魂。</p>
+            <p class="desc">置信度太低或内容碎到无法归类时用的兜底标签。即便分到 unknown，skill 也会按 transcript 给出尽力输出 + A–F 菜单让用户决定方向。</p>
           </div>
         </div>
       </div>
@@ -360,43 +354,48 @@
     <!-- ============================ HARD RULES ============================ -->
     <section id="rules">
       <div class="container">
-        <h2>五条硬规则</h2>
-        <p class="subhead">在 prompt 和 settings 两层冗余实现，即使被说服也兜得住。</p>
+        <h2>一条硬规则 + 四条诚实规则</h2>
+        <p class="subhead">默认姿态是<strong>先服务，再标注</strong>。skill 的工作是把"录音里说了什么"和"我推测了什么"分开列清，把决定权交给用户 —— 不是替用户拒绝。</p>
 
+        <h3 style="margin-top: 28px; color: var(--danger);">一条真正会拦动作的硬规则</h3>
         <ul class="rules">
           <li>
-            <span class="icon">✗</span>
+            <span class="icon" style="color: var(--danger);">!</span>
             <div>
-              <p class="rule-text">不编造 speaker 身份</p>
-              <p class="rule-why"><code>SPEAKER_01</code> 保持 <code>SPEAKER_01</code>，直到用户给出映射。"张同学"不会凭空出现。</p>
+              <p class="rule-text">对外发送必须显式 <code>confirm</code></p>
+              <p class="rule-why">草稿生成 → 用户审查 → 用户点 <code>发送</code> → 才出去。模型不能"决定发了"，因为发出去是不可逆的。这是 skill 唯一会真正拦住的动作；也是 STEP 5 选 E 时演示的那个流程。</p>
+            </div>
+          </li>
+        </ul>
+
+        <h3 style="margin-top: 28px;">四条规范<em>怎么写</em>、不阻断<em>是否输出</em>的诚实规则</h3>
+        <ul class="rules">
+          <li>
+            <span class="icon">·</span>
+            <div>
+              <p class="rule-text">不静默编造身份</p>
+              <p class="rule-why">不知道叫谁就用 <code>SPEAKER_01</code> / <code>临时-1</code>，并在不确定项里标"待确认收件人"。"张同学"不会凭空冒出来。</p>
             </div>
           </li>
           <li>
-            <span class="icon">✗</span>
+            <span class="icon">·</span>
             <div>
-              <p class="rule-text">不编造截止时间、任务归属</p>
-              <p class="rule-why">推测内容必须打 <code>（推测）</code> 标记，不能伪装成事实。</p>
+              <p class="rule-text">推测必标注</p>
+              <p class="rule-why">没说的截止时间、推断的归属、补的下一步行动 → 一律打 <code>（推测）</code> / <code>（待确认）</code>。让 reviewer 一眼分清"录音里说的"和"模型补的"。</p>
             </div>
           </li>
           <li>
-            <span class="icon">✗</span>
+            <span class="icon">·</span>
             <div>
-              <p class="rule-text">不自动发送任何东西</p>
-              <p class="rule-why">MVP 只生成草稿；发送是另一个明确审批的工具。<code>output.send_messages: false</code> 是配置硬开关。</p>
+              <p class="rule-text">不在个人草稿里默认夹带全文</p>
+              <p class="rule-why">草稿默认只引相关 excerpt。用户主动要全文再给。</p>
             </div>
           </li>
           <li>
-            <span class="icon">✗</span>
+            <span class="icon">·</span>
             <div>
-              <p class="rule-text">个人草稿里不夹带完整 transcript</p>
-              <p class="rule-why">草稿只引用与本人有关的段落，不漏会议全貌。<code>safety.forbid_full_transcript_in_drafts: true</code>。</p>
-            </div>
-          </li>
-          <li>
-            <span class="icon">✗</span>
-            <div>
-              <p class="rule-text">没引文 ≠ 任务</p>
-              <p class="rule-why">每条任务必须附时间戳引用。没有引文的"任务"自动降级为"待确认问题"。</p>
+              <p class="rule-text">API key 走环境变量</p>
+              <p class="rule-why"><code>settings.yaml</code> 写 <code>api_key_env: ASR_API_KEY</code>，不内联、不回显、不写日志。</p>
             </div>
           </li>
         </ul>
