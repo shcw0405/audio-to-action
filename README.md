@@ -2,6 +2,8 @@
 
 > 一个**懂办公流程**的语音 Skill：收到录音后，它知道下一步该做什么。
 
+🌐 **Live demo & docs** → [**caixu.me/audio-to-action**](https://caixu.me/audio-to-action/) — 包含一段真实实验室录音的端到端运行展示。
+
 普通 ASR 工具只做一件事：
 
 ```
