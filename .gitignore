@@ -43,6 +43,11 @@ out/
 *.ogg
 *.webm
 
+# Exception: the anonymized public demo clip used by the GitHub Pages site
+# is committed. It has been pitch-shifted + downsampled so it cannot be used
+# for voiceprint identification.
+!docs/demo_clip.mp3
+
 # Local-only settings. Keep settings.yaml in git as a reference; if you
 # need a private override, copy it to settings.local.yaml.
 settings.local.yaml
