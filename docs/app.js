@@ -33,7 +33,7 @@
   let LLM_DATA = null;  // populated from fetch on load
 
   function realTime(stepId) {
-    if (stepId === 'asr') return '实际 wall-clock 72s · 0.83× 实时（动画压缩到 ~1.6s）';
+    if (stepId === 'asr') return '实际 wall-clock 898s · 0.83× 实时 · 12 分 29 秒音频（动画压缩到 ~1.6s）';
     if (stepId === 'classify' && LLM_DATA?.classify?.elapsed_s) {
       return `LLM 调用 ${LLM_DATA.classify.elapsed_s}s · model: ${LLM_DATA._meta?.model || '?'} · ${LLM_DATA.classify.usage?.completion_tokens || '?'} comp tokens`;
     }

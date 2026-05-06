@@ -93,7 +93,7 @@
         <!-- Audio player -->
         <div class="audio-player" id="audio-player">
           <div class="audio-meta">
-            <strong>实验室真实讨论片段 · 60s</strong>
+            <strong>实验室真实讨论 · 12 分 29 秒（完整对话）</strong>
             <span class="audio-tag">已匿名化处理</span>
           </div>
           <audio controls preload="metadata">
@@ -101,21 +101,23 @@
             您的浏览器不支持音频播放。
           </audio>
           <p class="audio-caption">
-            原始为 16 kHz mono PCM-WAV；为保护说话人声纹，公开版本经 ffmpeg 处理：
+            原始为 16 kHz mono MP3；为保护说话人声纹，公开版本经 ffmpeg 处理：
             <code>asetrate*0.84</code>（pitch −3 semitones）<code>+ atempo</code>（恢复时长）
-            <code>+ aresample=8000</code>（降采样到电话带宽）。语义保留，声纹破坏。
+            <code>+ aresample=8000</code>（降采样到电话带宽）。语义和节奏保留，声纹破坏。
+            完整 12.5 分钟一整段，下面所有 transcript / 分类 / 选项输出都是这段对话的真实处理结果。
           </p>
         </div>
 
         <!-- Demo metadata -->
         <div class="demo-meta">
           <dl>
-            <dt>送进 ASR 的格式</dt><dd>16,000 Hz mono PCM-WAV (经 ffmpeg 转码自 Opus-in-MP4 m4a)</dd>
-            <dt>大小</dt><dd>1,921,102 bytes (1.83 MB)</dd>
-            <dt>时长</dt><dd>60.13 s</dd>
+            <dt>送进 ASR 的格式</dt><dd>16,000 Hz mono PCM-WAV (经 ffmpeg 转码自 MP3)</dd>
+            <dt>原始大小</dt><dd>11,989,485 bytes (11.4 MB MP3)</dd>
+            <dt>WAV 大小</dt><dd>23,978,958 bytes (22.9 MB)</dd>
+            <dt>时长</dt><dd>749.34 s (12 min 29 s)</dd>
             <dt>ASR backend</dt><dd>local Doubao @ 127.0.0.1:8836，无 auth</dd>
             <dt>LLM backend</dt><dd>minimax-m27-gw via uni-api.cstcloud.cn (推理模型，输出剥离 &lt;think&gt; 块)</dd>
-            <dt>ASR 用时</dt><dd>72 s（≈ 0.83× 实时；动画压缩到 ~1.6s）</dd>
+            <dt>ASR 用时</dt><dd>898 s（≈ 0.83× 实时，14 min 58 s；动画压缩到 ~1.6s）</dd>
           </dl>
         </div>
 
@@ -129,8 +131,8 @@
           <p class="step-desc">检查格式、大小、时长。本机没有 ffprobe，<code>duration</code> 字段降级为 <code>None</code> 并发出 warning，但不阻断流程。</p>
           <div class="step-output">
 <pre><code><span class="c"># tools/utils.py::probe_audio  (real stdout)</span>
-[probe]    /tmp/asr_probe_60s.wav
-[probe]    ext=<span class="s">wav</span>  size=<span class="n">1.83 MB</span>  duration=<span class="w">None</span>
+[probe]    /Users/caixu/Downloads/05月06日 16:08 录音.mp3
+[probe]    ext=<span class="s">mp3</span>  size=<span class="n">11.4 MB</span>  duration=<span class="w">None</span>
 [probe]    warn: ffprobe not found on PATH; cannot determine duration.
                  Install ffmpeg to enable duration checks.</code></pre>
           </div>
@@ -151,14 +153,15 @@
 <span class="k">language</span>:    <span class="s">zh</span>
 <span class="k">api_key_env</span>: <span class="s">ASR_API_KEY</span>   <span class="c"># env var unset → 不发 Authorization 头</span></code></pre>
             <p class="elapsed">⏱ <span data-elapsed></span></p>
-<pre><code><span class="c">// raw response from Doubao</span>
+<pre><code><span class="c">// raw response from Doubao (full 853-char transcript)</span>
 {
   <span class="k">"task"</span>:     <span class="s">"transcribe"</span>,
   <span class="k">"language"</span>: <span class="s">"zh"</span>,
   <span class="k">"duration"</span>: <span class="n">0.0</span>,
-  <span class="k">"text"</span>:     <span class="s">"是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。"</span>
+  <span class="k">"text"</span>:     <span class="s">"3456788，反正就跟这个一样，把这个放到前面冒号就这样写，好吧？这个，这个不行啊？这不行，ok，这不行，ok，这个你要查一查是不是这么写的，那个 KMC 那个你看了吗？...（中略约 600 字）...差不多这周，这周就这个，这个这个网站，对，你到时候放到那个 Github 上，今晚要不要改一下？那么咱们实在是不行，你有权利没有？行，我到时候你把你的那个他们的账号给我发过去，然后我到时候。他这个东西就白做了，没有用啊？他是，他是这么着也是想做一个泛化的。"</span>
   <span class="c">// note: no "segments" key — this server doesn't emit them</span>
 }</code></pre>
+
             <div class="notice">
               <strong>关键发现：</strong> 这个 endpoint 不返回 <code>segments</code> 数组，只给 <code>text</code>。普通 ASR wrapper 到这里就结束 —— skill 这边下游会知道 <code>segments=[]</code>，下面的任务和草稿都会用 <em>"录音中段"</em> 代替 <code>mm:ss</code> 引文，但<strong>仍然照常输出</strong>。"先服务，再标注"。
             </div>
@@ -176,10 +179,10 @@
           <div class="step-output">
 <pre><code><span class="c">// out/transcript.json (real output)</span>
 {
-  <span class="k">"source_file"</span>: <span class="s">"/tmp/asr_probe_60s.wav"</span>,
+  <span class="k">"source_file"</span>: <span class="s">"/Users/caixu/Downloads/05月06日 16:08 录音.mp3"</span>,
   <span class="k">"language"</span>:    <span class="s">"zh"</span>,
-  <span class="k">"duration"</span>:    <span class="n">60.13</span>,
-  <span class="k">"text"</span>:        <span class="s">"是测了什么？...那我。"</span>,
+  <span class="k">"duration"</span>:    <span class="n">749.34</span>,
+  <span class="k">"text"</span>:        <span class="s">"3456788，反正就跟这个一样...（共 853 字）...想做一个泛化的。"</span>,
   <span class="k">"segments"</span>:    [],          <span class="c">// ← empty (provider gave none)</span>
   <span class="k">"metadata"</span>: {
     <span class="k">"asr_provider"</span>: <span class="s">"openai_compatible"</span>,
@@ -283,10 +286,10 @@
             <h3 class="step-title">route — 选输出形态</h3>
             <button class="step-btn" data-action="run-step" data-target="route" disabled>▶ 展示菜单</button>
           </div>
-          <p class="step-desc">分类置信度 <strong>0.65</strong> 在阈值上方 —— skill 默认会按 <code>voice_memo</code> preset 输出。但用户可以选 A–F 让 skill 用其他形式整理。<strong>无论选哪个，都会输出</strong>，不会因为缺时间戳 / 缺 diarization 就拒绝；不确定的字段会显式标 <code>（推测）</code> / <code>（待确认）</code>。</p>
+          <p class="step-desc">分类置信度 <strong>0.78</strong>，落在 <code>advisor_student_discussion</code>（师生 1:1 讨论）—— skill 默认会按这个 preset 输出。但用户仍可以选 A–F 让 skill 用其他形式整理。<strong>无论选哪个，都会输出</strong>，不会因为缺时间戳 / 缺 diarization 就拒绝；不确定的字段会显式标 <code>（推测）</code> / <code>（待确认）</code>。</p>
           <div class="step-output">
             <div class="ask-message">
-              <p>转写完毕（<strong>~1m0s</strong>，<strong>1 段</strong>）。skill 把它分到 <strong class="accent">voice_memo</strong>（置信度 0.65）。</p>
+              <p>转写完毕（<strong>~12m29s</strong>，<strong>1 段</strong>）。skill 把它分到 <strong class="accent">advisor_student_discussion（师生 1:1）</strong>，置信度 0.78。</p>
               <p>你想要哪种输出？</p>
             </div>
 

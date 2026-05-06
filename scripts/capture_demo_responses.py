@@ -35,18 +35,31 @@ OUT_PATH = ROOT / "docs" / "demo_responses.json"
 DEFAULT_API_URL = "https://uni-api.cstcloud.cn/v1/chat/completions"
 DEFAULT_MODEL = "minimax-m27-gw"
 
-# The 60-second real transcript captured from Doubao earlier in this project.
-TRANSCRIPT = (
-    "是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？"
-    "你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照"
-    "论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。"
-)
+# Path to a UTF-8 text file holding the canonical transcript. Override with
+# --transcript-file. The file is a single paragraph; no segments / no
+# diarization is assumed (the realistic case for many ASR providers).
+DEFAULT_TRANSCRIPT_FILE = "/tmp/demo2_transcript.txt"
 
 
 def strip_think(text: str) -> str:
     """Reasoning models wrap their chain-of-thought in <think>...</think>.
     The site only wants the final answer."""
     return re.sub(r"<think>.*?</think>\s*", "", text, flags=re.DOTALL).strip()
+
+
+def strip_outer_fence(text: str) -> str:
+    """Remove a single outer ```language ... ``` markdown code fence if present.
+
+    Some models still wrap whole responses in a fence even when asked not to.
+    The website wants raw markdown / JSON for downstream rendering.
+    """
+    s = text.strip()
+    m = re.match(r"^```(?:json|markdown|md)?\s*\n(.*)\n```\s*$", s, re.DOTALL)
+    return m.group(1).strip() if m else s
+
+
+def clean_response(text: str) -> str:
+    return strip_outer_fence(strip_think(text))
 
 
 def load_prompt(name: str) -> str:
@@ -84,7 +97,7 @@ class LLM:
         content = body["choices"][0]["message"]["content"]
         usage = body.get("usage", {})
         return {
-            "content": strip_think(content),
+            "content": clean_response(content),
             "raw_content": content,
             "elapsed_s": round(elapsed, 1),
             "usage": usage,
@@ -97,6 +110,8 @@ def main() -> None:
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--key-env", default="DEMO_API_KEY",
                         help="env-var name holding the API key")
+    parser.add_argument("--transcript-file", default=DEFAULT_TRANSCRIPT_FILE,
+                        help="UTF-8 text file with the transcript to feed the LLM")
     parser.add_argument("--only", default=None,
                         help="run only this single key (e.g. classify, A, B...)")
     args = parser.parse_args()
@@ -108,13 +123,21 @@ def main() -> None:
             f"  export {args.key_env}=<your-key>"
         )
 
+    transcript_path = Path(args.transcript_file)
+    if not transcript_path.is_file():
+        sys.exit(f"transcript file not found: {transcript_path}")
+    transcript = transcript_path.read_text(encoding="utf-8").strip()
+    if not transcript:
+        sys.exit(f"transcript file is empty: {transcript_path}")
+    print(f"[in] transcript {transcript_path}: {len(transcript)} chars")
+
     llm = LLM(args.url, key, args.model)
 
     # Each task pairs a system-prompt template with the user-side message.
     # The user side narrates the realistic situation: "this transcript came
-    # from a single-speaker recording with no segments, no diarization;
-    # please serve the user's request despite the gaps."
-    transcript_block = f"```\n{TRANSCRIPT}\n```"
+    # from a recording with no segments and no diarization; please serve
+    # the user's request despite the gaps."
+    transcript_block = f"```\n{transcript}\n```"
     no_segments_note = (
         "本次 ASR 输出**没有 segments、没有 diarization**（provider 仅返回 text）。"
         "按修订后的服务姿态：尽力输出，不确定的字段显式标注（推测 / 待确认 / 占位符），"
@@ -164,7 +187,7 @@ def main() -> None:
                 "并对所有非显式字段标注 `（推测）` / `（待确认）`。"
                 "owner 不明时使用 `临时-1` 占位符。不要 markdown 围栏。"
             ),
-            "max_tokens": 1800,
+            "max_tokens": 3000,
         },
         "D": {
             "system": load_prompt("extract_tasks.md"),
@@ -226,8 +249,8 @@ def main() -> None:
         "model": args.model,
         "endpoint": args.url,
         "captured_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "transcript": TRANSCRIPT,
-        "transcript_chars": len(TRANSCRIPT),
+        "transcript": transcript,
+        "transcript_chars": len(transcript),
         "captured_keys": sorted(k for k in existing if k != "_meta"),
     }
 
