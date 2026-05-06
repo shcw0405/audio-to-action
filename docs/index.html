@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>audio-to-action — 让录音知道下一步该做什么</title>
+  <meta name="description" content="A Claude Code skill that turns lab/office recordings into reviewable structured artifacts — summaries, per-person tasks, message drafts. Five preset scenes; asks instead of guesses; never auto-sends.">
+  <meta property="og:title" content="audio-to-action">
+  <meta property="og:description" content="A Claude Code skill: audio → reviewable structured artifacts. Five preset scenes; asks instead of guesses; never auto-sends.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://shcw0405.github.io/audio-to-action/">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <a href="#top" class="logo">audio-to-action</a>
+      <nav>
+        <a href="#demo">Demo</a>
+        <a href="#presets">Presets</a>
+        <a href="#start">Quick Start</a>
+        <a href="https://github.com/shcw0405/audio-to-action">GitHub →</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ============================ HERO ============================ -->
+    <section class="hero">
+      <div class="container">
+        <h1>录音不只是文字。<br>它是<span class="accent">下一步行动</span>的开始。</h1>
+        <p class="tagline">
+          一个 Claude Code skill：把实验室 / 办公室录音变成可审查的结构化产出
+          —— 摘要、按人拆分的任务、消息草稿。五种 preset 场景；不确定时主动询问、不胡猜；任何对外发送都先经人工审查。
+        </p>
+
+<pre class="compare"><span class="label">普通 ASR     </span><span class="arrow">→ </span><span class="bad">音频 → 一大块文字（然后你坐下来读一晚上）</span>
+
+<span class="label">这个 skill   </span><span class="arrow">→ </span><span class="good">音频 → 摘要 + 任务 + 草稿 → 你审查 → 发送</span></pre>
+
+        <div class="ctas">
+          <a class="btn btn-primary" href="https://github.com/shcw0405/audio-to-action">View on GitHub →</a>
+          <a class="btn btn-secondary" href="#demo">看一段真实演示</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ THE PROBLEM ============================ -->
+    <section id="problem">
+      <div class="container">
+        <h2>它解决的问题</h2>
+        <p class="subhead">研究所 / 课题组里录音随处可见，但转写本身远远不够。</p>
+
+        <p>组会、师生 1:1 讨论、临时聊天、语音备忘录、进展汇报 —— 每种场景需要的处理<strong>都不一样</strong>。把组会模板套到临时聊天上，会得出"张同学需要在周五前完成 X"这种<strong>根本没人说过</strong>的"任务"。这是普通 LLM workflow 最常见的失败模式。</p>
+
+        <p><code>audio-to-action</code> 给每种场景一个 preset，配一套 prompt 模板，明确<em>什么能输出、什么必须先问用户</em>。</p>
+
+        <div class="problem-grid">
+          <div class="problem-card bad">
+            <h4>不该做的事</h4>
+            <div class="flow">音频
+→ 转写
+→ 强行套"组会摘要"
+→ 编造学生姓名
+→ 编造截止时间
+→ 自动群发</div>
+            <p class="note">每一步都在累积错误。最后那条群发是不可逆的。</p>
+          </div>
+          <div class="problem-card good">
+            <h4>这个 skill 做的事</h4>
+            <div class="flow">音频
+→ 转写
+→ 清理
+→ 分类（5 种 + unknown）
+→ 套对应 preset
+   或不确定时<em>问用户</em>
+→ 输出待审查产物
+→ 永远不自动发</div>
+            <p class="note">每一步的不确定性都被显式标注。"推测"、"待确认"、"未明确"是常用词。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ LIVE DEMO ============================ -->
+    <section id="demo">
+      <div class="container">
+        <h2>一次真实的端到端运行</h2>
+        <p class="subhead">用一段实验室真实录音的 60 秒片段走完整个 pipeline。下面所有 JSON、文本、用时数字均来自真实运行结果，未经修饰。</p>
+
+        <div class="demo-meta">
+          <dl>
+            <dt>录音来源</dt><dd>真实研究讨论片段（开头 60s）</dd>
+            <dt>原始格式</dt><dd>Opus-in-MP4 m4a (来源应用导出)</dd>
+            <dt>送进 ASR 的格式</dt><dd>16,000 Hz mono PCM-WAV (经 ffmpeg 转码)</dd>
+            <dt>大小</dt><dd>1,921,102 bytes (1.83 MB)</dd>
+            <dt>时长</dt><dd>60.13 s</dd>
+            <dt>ASR backend</dt><dd>local Doubao @ 127.0.0.1:8836，无 auth</dd>
+            <dt>处理用时</dt><dd>72 s（≈ 0.83× 实时）</dd>
+          </dl>
+        </div>
+
+        <!-- STEP 1: PROBE -->
+        <div class="demo-step">
+          <div class="step-head">
+            <span class="step-num">STEP 1</span>
+            <h3 class="step-title">probe_audio — 文件预检</h3>
+          </div>
+          <p class="step-desc">检查格式、大小、时长。本机没有 ffprobe，<code>duration</code> 字段降级为 <code>None</code> 并发出 warning，但不阻断流程。</p>
+<pre><code><span class="c"># tools/utils.py::probe_audio  (real stdout)</span>
+[probe]    /tmp/asr_probe_60s.wav
+[probe]    ext=<span class="s">wav</span>  size=<span class="n">1.83 MB</span>  duration=<span class="w">None</span>
+[probe]    warn: ffprobe not found on PATH; cannot determine duration.
+                 Install ffmpeg to enable duration checks.</code></pre>
+        </div>
+
+        <!-- STEP 2: ASR CALL -->
+        <div class="demo-step">
+          <div class="step-head">
+            <span class="step-num">STEP 2</span>
+            <h3 class="step-title">asr_client.transcribe — 调 ASR</h3>
+          </div>
+          <p class="step-desc">完全走 OpenAI 兼容路径：<code>POST /v1/audio/transcriptions</code>。adapter 不知道服务端是 Doubao、Whisper 还是 vLLM —— 这是配置层决定的。</p>
+<pre><code><span class="c"># settings.yaml::asr.openai_compatible</span>
+<span class="k">base_url</span>:    <span class="s">http://127.0.0.1:8836/v1</span>
+<span class="k">model</span>:       <span class="s">doubao-asr</span>
+<span class="k">language</span>:    <span class="s">zh</span>
+<span class="k">api_key_env</span>: <span class="s">ASR_API_KEY</span>   <span class="c"># env var unset → 不发 Authorization 头</span></code></pre>
+
+<pre><code><span class="c">// raw response from Doubao</span>
+{
+  <span class="k">"task"</span>:     <span class="s">"transcribe"</span>,
+  <span class="k">"language"</span>: <span class="s">"zh"</span>,
+  <span class="k">"duration"</span>: <span class="n">0.0</span>,
+  <span class="k">"text"</span>:     <span class="s">"是测了什么？我们测了什么，对吧？我比别人更完备的在哪些地方？你自己这个表其实不换论文，你这个得有知道，要不然现在就是你不是一个按照论文的作文方式去做，因为现在就又随机又走了。嗯，我现在又变成了，那我。"</span>
+  <span class="c">// note: no "segments" key — this server doesn't emit them</span>
+}</code></pre>
+
+          <div class="notice">
+            <strong>关键发现：</strong> 这个 endpoint 不返回 <code>segments</code> 数组，只给 <code>text</code>。普通 ASR wrapper 到这里就结束 —— 但 skill 的下游会因此<strong>触发安全机制</strong>，拒绝生成需要时间戳引文的产物（per-person 草稿、按人拆分任务）。这不是 bug，是<em>设计</em>。
+          </div>
+        </div>
+
+        <!-- STEP 3: NORMALIZE -->
+        <div class="demo-step">
+          <div class="step-head">
+            <span class="step-num">STEP 3</span>
+            <h3 class="step-title">normalize — 归一化为统一 Transcript</h3>
+          </div>
+          <p class="step-desc">无论 provider 给什么形状，下游只看见这一种 schema。<code>segments</code> 缺失时不抛错，留空数组，把判断留给后续步骤。</p>
+<pre><code><span class="c">// out/transcript.json (real output)</span>
+{
+  <span class="k">"source_file"</span>: <span class="s">"/tmp/asr_probe_60s.wav"</span>,
+  <span class="k">"language"</span>:    <span class="s">"zh"</span>,
+  <span class="k">"duration"</span>:    <span class="n">60.13</span>,
+  <span class="k">"text"</span>:        <span class="s">"是测了什么？...那我。"</span>,
+  <span class="k">"segments"</span>:    [],          <span class="c">// ← empty (provider gave none)</span>
+  <span class="k">"metadata"</span>: {
+    <span class="k">"asr_provider"</span>: <span class="s">"openai_compatible"</span>,
+    <span class="k">"asr_model"</span>:    <span class="s">"doubao-asr"</span>,
+    <span class="k">"diarization"</span>:  <span class="a">false</span>
+  }
+}</code></pre>
+        </div>
+
+        <!-- STEP 4: CLASSIFY -->
+        <div class="demo-step">
+          <div class="step-head">
+            <span class="step-num">STEP 4</span>
+            <h3 class="step-title">classify — 这是哪种录音？</h3>
+          </div>
+          <p class="step-desc">按 <code>prompts/classify_audio_content.md</code> 的契约，输出严格 JSON。下面是 LLM 应用该 prompt 后的真实输出。</p>
+<pre><code>{
+  <span class="k">"label"</span>:        <span class="s">"casual_discussion"</span>,
+  <span class="k">"confidence"</span>:   <span class="n">0.55</span>,
+  <span class="k">"rationale"</span>:    <span class="s">"单人监督式自语 + 抽象的论文写作方法学批评，无明确任务分派、无具体截止时间；介于'临时讨论'与'导师独白'之间，故置信度偏低。"</span>,
+  <span class="k">"alternative_label"</span>:      <span class="s">"advisor_student_discussion"</span>,
+  <span class="k">"alternative_confidence"</span>: <span class="n">0.42</span>
+}</code></pre>
+        </div>
+
+        <!-- STEP 5: SAFETY BRANCH -->
+        <div class="demo-step">
+          <div class="step-head">
+            <span class="step-num">STEP 5</span>
+            <h3 class="step-title">safety branch — 不确定时<em>问</em>，不要猜</h3>
+          </div>
+          <p class="step-desc">置信度 0.55 &lt; 阈值 0.6，且 <code>segments</code> 为空（无法引用时间戳）。skill 不硬套 preset，按 <code>prompts/ask_followup.md</code> 弹菜单：</p>
+
+<pre><code>我已完成转写（约 1m0s，1 段）。
+这段录音看起来更像 <span class="a">一次临时讨论</span>，置信度 <span class="w">0.55（偏低）</span>。
+
+你希望我怎么处理？
+
+  A. 只整理全文转写
+  B. 总结核心观点
+  C. 提取待办事项
+  D. 按参与人拆分任务
+  E. 生成可发送给他人的消息草稿
+     <span class="w">（**会先给你审查，不会自动发送**）</span>
+  F. 自定义处理方式（请告诉我具体目标）
+
+附加问题（可选回答）：
+  - 这段录音里只有一位说话人，还是有多人？
+    我没拿到 diarization 数据。
+  - 是否有保密要求？我可以避免把全文写入任何对外消息草稿。</code></pre>
+
+          <div class="notice">
+            <strong>注意一个隐含的拒绝：</strong> 即使你接下来选 D 或 E，由于 <code>segments=[]</code>，skill 仍会拒绝输出。<code>prompts/extract_tasks.md</code> 和 <code>prompts/build_student_messages.md</code> 都要求每条任务 / 草稿附时间戳引文 —— 这条硬规则在 prompt 和 settings 两层冗余，单靠"被说服"绕不过去。
+          </div>
+        </div>
+
+        <!-- STEP 6: USER PICKS B → SUMMARY -->
+        <div class="demo-step">
+          <div class="step-head">
+            <span class="step-num">STEP 6</span>
+            <h3 class="step-title">假设用户选 B：总结核心观点</h3>
+          </div>
+          <p class="step-desc">B 不依赖时间戳引文，可以执行。下面是 LLM 按 <code>casual_discussion</code> preset 输出的内容（节选）：</p>
+<pre><code><span class="c"># 临时讨论整理（节选）</span>
+
+<span class="k">## 一、讨论背景</span>
+
+  说话人正在反思一项工作的"测了什么"以及"相比其他工作的完备性"，
+  并就该工作对应论文的写作组织方式提出批评。
+
+<span class="k">## 二、核心观点</span>
+
+  - "测了什么 / 我们测了什么"是核心问题：当前结果尚未清楚回答
+    "我们与其他工作在哪些维度上更完备"。
+  - 当前论文的写作组织偏松散，缺少一张明确的对比维度表，导致
+    论述"随机又走了"，读者难以抓住主线。
+
+<span class="k">## 四、未解决问题</span>
+
+  - 究竟用哪些维度作为"更完备"的衡量标准？录音中未明确。
+  - 论文的当前写作框架是否需要重写？讨论提到了缺陷，未决断。
+
+<span class="k">## 五、下一步行动 <span class="w">（建议，待确认）</span></span>
+
+  <span class="w">> 这部分是模型基于讨论内容的整理（推测），不是会议中明确</span>
+  <span class="w">> 交代的任务。是否纳入待办，请你确认。</span>
+
+  - <span class="w">（推测）</span>先把"对比维度表"补齐再写正文，否则论述顺序容易回退。
+  - <span class="w">（推测）</span>把"我们和别人的完备性差异"作为论文 §1 的锚点。</code></pre>
+          <div class="notice">
+            <strong>叙事完整性：</strong> 输出里所有"建议 / 下一步"全部带 <code>（推测）</code> 标记 —— 因为录音原话只点出问题，没给出建议；下游读者很容易把模型补的建议当成"录音里的结论"，所以必须显式区分。
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================ PRESETS ============================ -->
+    <section id="presets">
+      <div class="container">
+        <h2>五个 preset，加一个"我不确定"</h2>
+        <p class="subhead">每个 preset 配一套 prompt 模板和必填字段。</p>
+
+        <div class="preset-grid">
+          <div class="preset-card">
+            <p class="name">group_meeting</p>
+            <p class="label-cn">组会</p>
+            <p class="desc">导师 + 多个学生，明确任务分派。输出含按人拆分的任务、待审查消息清单、待确认问题。</p>
+          </div>
+          <div class="preset-card">
+            <p class="name">advisor_student_discussion</p>
+            <p class="label-cn">师生 1:1</p>
+            <p class="desc">导师与单个学生的讨论，含指导意见和下一步任务。输出含进展、建议、可发送消息草稿。</p>
+          </div>
+          <div class="preset-card">
+            <p class="name">casual_discussion</p>
+            <p class="label-cn">临时讨论</p>
+            <p class="desc">非正式聊天，想法阶段。输出聚焦核心观点、达成共识、未解决问题，<em>不强行编出任务</em>。</p>
+          </div>
+          <div class="preset-card">
+            <p class="name">voice_memo</p>
+            <p class="label-cn">语音备忘录</p>
+            <p class="desc">单人对自己说话。输出整理后的笔记 + Todo 列表 + 后续可展开方向。</p>
+          </div>
+          <div class="preset-card">
+            <p class="name">student_progress_report</p>
+            <p class="label-cn">学生进展汇报</p>
+            <p class="desc">学生汇报上周工作。输出已完成事项、当前问题、需要导师反馈的点。</p>
+          </div>
+          <div class="preset-card" style="border-color: var(--warn);">
+            <p class="name" style="color: var(--warn);">unknown</p>
+            <p class="label-cn">不确定</p>
+            <p class="desc">置信度 &lt; 0.6 时不硬套模板，弹 A–F 菜单让用户选。这一项是这个 skill 的灵魂。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ HARD RULES ============================ -->
+    <section id="rules">
+      <div class="container">
+        <h2>五条硬规则</h2>
+        <p class="subhead">在 prompt 和 settings 两层冗余实现，即使被说服也兜得住。</p>
+
+        <ul class="rules">
+          <li>
+            <span class="icon">✗</span>
+            <div>
+              <p class="rule-text">不编造 speaker 身份</p>
+              <p class="rule-why"><code>SPEAKER_01</code> 保持 <code>SPEAKER_01</code>，直到用户给出映射。"张同学"不会凭空出现。</p>
+            </div>
+          </li>
+          <li>
+            <span class="icon">✗</span>
+            <div>
+              <p class="rule-text">不编造截止时间、任务归属</p>
+              <p class="rule-why">推测内容必须打 <code>（推测）</code> 标记，不能伪装成事实。</p>
+            </div>
+          </li>
+          <li>
+            <span class="icon">✗</span>
+            <div>
+              <p class="rule-text">不自动发送任何东西</p>
+              <p class="rule-why">MVP 只生成草稿；发送是另一个明确审批的工具。<code>output.send_messages: false</code> 是配置硬开关。</p>
+            </div>
+          </li>
+          <li>
+            <span class="icon">✗</span>
+            <div>
+              <p class="rule-text">个人草稿里不夹带完整 transcript</p>
+              <p class="rule-why">草稿只引用与本人有关的段落，不漏会议全貌。<code>safety.forbid_full_transcript_in_drafts: true</code>。</p>
+            </div>
+          </li>
+          <li>
+            <span class="icon">✗</span>
+            <div>
+              <p class="rule-text">没引文 ≠ 任务</p>
+              <p class="rule-why">每条任务必须附时间戳引用。没有引文的"任务"自动降级为"待确认问题"。</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================ ARCHITECTURE ============================ -->
+    <section id="arch">
+      <div class="container">
+        <h2>三层架构，各自可换</h2>
+        <p class="subhead">ASR 与 LLM 后处理解耦；prompt 是纯 markdown。</p>
+
+        <div class="arch-layer">
+          <h4>Prompts 层 — <code>prompts/*.md</code></h4>
+          <p>LLM 行为契约。纯 markdown，可审查、可 diff、可 PR。改 prompt 不动代码。</p>
+        </div>
+        <div class="arch-layer">
+          <h4>Tools 层 — <code>tools/*.py</code></h4>
+          <p>数据契约，类型严格。dataclass 验证、provider 注册表、归一化、ffmpeg 包装、密钥脱敏。</p>
+        </div>
+        <div class="arch-layer">
+          <h4>配置层 — <code>settings.yaml</code></h4>
+          <p>切 ASR provider、调阈值、开关安全策略。不动代码。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ QUICK START ============================ -->
+    <section id="start">
+      <div class="container">
+        <h2>5 分钟上手</h2>
+        <p class="subhead">假设你已经有 Claude Code 和一个 OpenAI 兼容的 ASR endpoint。</p>
+
+<pre><code><span class="c"># 1. clone 到 Claude Code 的 skills 目录</span>
+git clone https://github.com/shcw0405/audio-to-action.git
+cp -r audio-to-action ~/.claude/skills/
+
+<span class="c"># 2. 安装运行依赖</span>
+cd audio-to-action
+pip install -r requirements.txt
+
+<span class="c"># 3. 指向你的 ASR endpoint</span>
+<span class="c">#    编辑 settings.yaml::asr.openai_compatible.base_url</span>
+export ASR_API_KEY=sk-...
+
+<span class="c"># 4. 在 Claude Code 里丢一个音频文件</span>
+<span class="c">#    "整理一下这段录音 ./meeting.mp3"</span></code></pre>
+
+        <p>批处理 / 调试场景可以直接用 Python 入口，不必走 Claude Code：</p>
+<pre><code>python scripts/run_pipeline.py path/to/audio.m4a \
+    --settings settings.yaml \
+    --out-dir ./out</code></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <span>© 2026 audio-to-action · MIT License</span>
+      <span>
+        <a href="https://github.com/shcw0405/audio-to-action">GitHub</a> ·
+        <a href="https://github.com/shcw0405/audio-to-action/blob/main/SKILL.md">SKILL.md</a> ·
+        <a href="https://github.com/shcw0405/audio-to-action/blob/main/LICENSE">License</a>
+      </span>
+    </div>
+  </footer>
+
+</body>
+</html>

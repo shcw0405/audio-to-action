@@ -1,0 +1,574 @@
+/* audio-to-action — GitHub Pages site
+ *
+ * Single-stylesheet, no framework. Dark by default.
+ * Aim: tasteful, technical, fast. ~3 KB on the wire.
+ */
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface-2: #1a1a1a;
+  --border: #2a2a2a;
+  --text: #e8e8e8;
+  --text-dim: #9aa0a6;
+  --text-faint: #6b7280;
+  --accent: #00d4aa;
+  --accent-dim: #007a63;
+  --warn: #f59e0b;
+  --code-bg: #0f1419;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- layout ---------- */
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.container-wide {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---------- header ---------- */
+
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+header .logo {
+  font: 600 15px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+header nav {
+  display: flex;
+  gap: 18px;
+  font-size: 14px;
+}
+
+header nav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+header nav a:hover {
+  color: var(--accent);
+}
+
+/* ---------- hero ---------- */
+
+.hero {
+  padding: 88px 0 64px;
+  text-align: left;
+}
+
+.hero h1 {
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1.05;
+  margin: 0 0 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.hero h1 .accent {
+  color: var(--accent);
+}
+
+.hero .tagline {
+  font-size: 19px;
+  color: var(--text-dim);
+  margin: 0 0 36px;
+  max-width: 560px;
+}
+
+.hero .compare {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 22px;
+  font: 13.5px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  margin: 0 0 36px;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.hero .compare .label {
+  color: var(--text-faint);
+}
+
+.hero .compare .arrow {
+  color: var(--text-faint);
+}
+
+.hero .compare .bad {
+  color: #f87171;
+}
+
+.hero .compare .good {
+  color: var(--accent);
+}
+
+.hero .ctas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #001f1a;
+}
+
+.btn-primary:hover {
+  background: #2eebbf;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- sections ---------- */
+
+section {
+  padding: 56px 0;
+  border-top: 1px solid var(--border);
+}
+
+section h2 {
+  font-size: 28px;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+section .subhead {
+  color: var(--text-dim);
+  margin: 0 0 32px;
+  font-size: 15px;
+}
+
+section h3 {
+  font-size: 18px;
+  margin: 28px 0 10px;
+  font-weight: 600;
+}
+
+p {
+  margin: 0 0 14px;
+  color: var(--text);
+}
+
+/* ---------- the problem section ---------- */
+
+.problem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.problem-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px;
+}
+
+.problem-card.bad {
+  border-color: #3b1f1f;
+}
+
+.problem-card.good {
+  border-color: var(--accent-dim);
+}
+
+.problem-card h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.problem-card.bad h4 {
+  color: #f87171;
+}
+
+.problem-card.good h4 {
+  color: var(--accent);
+}
+
+.problem-card .flow {
+  font: 13px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--text);
+}
+
+.problem-card .note {
+  margin-top: 14px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .problem-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- demo section (the real run) ---------- */
+
+.demo-meta {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin: 0 0 32px;
+  font-size: 14px;
+}
+
+.demo-meta dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 18px;
+  margin: 0;
+}
+
+.demo-meta dt {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.demo-meta dd {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+.demo-step {
+  margin: 0 0 28px;
+}
+
+.demo-step .step-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.demo-step .step-num {
+  font: 600 12px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--accent);
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid var(--accent-dim);
+  padding: 4px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.demo-step .step-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.demo-step .step-desc {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin: -6px 0 12px;
+  padding-left: 0;
+}
+
+.demo-step pre {
+  margin: 12px 0 0;
+}
+
+.notice {
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid var(--warn);
+  padding: 12px 16px;
+  margin: 16px 0;
+  border-radius: 0 6px 6px 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.notice strong {
+  color: var(--warn);
+}
+
+/* ---------- code blocks ---------- */
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  margin: 16px 0;
+  font: 13px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  -webkit-text-size-adjust: 100%;
+}
+
+pre code {
+  color: var(--text);
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  white-space: pre;
+}
+
+code {
+  font: 13px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--surface-2);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* very lightweight syntax tinting for our pre blocks */
+pre .k { color: #c084fc; }   /* keyword */
+pre .s { color: #86efac; }   /* string */
+pre .n { color: #fde68a; }   /* number / value */
+pre .c { color: var(--text-faint); font-style: italic; }   /* comment */
+pre .p { color: var(--text-dim); }   /* punctuation */
+pre .a { color: var(--accent); }     /* accent / highlight */
+pre .w { color: var(--warn); }       /* warning / inferred */
+
+/* ---------- preset cards ---------- */
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.preset-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  transition: border-color 0.15s;
+}
+
+.preset-card:hover {
+  border-color: var(--accent-dim);
+}
+
+.preset-card .name {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--accent);
+  margin: 0 0 4px;
+}
+
+.preset-card .label-cn {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.preset-card .desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ---------- hard rules ---------- */
+
+.rules {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+}
+
+.rules li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 14px;
+  align-items: baseline;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.rules li:last-child {
+  border-bottom: none;
+}
+
+.rules .icon {
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.rules .rule-text {
+  font-weight: 500;
+}
+
+.rules .rule-why {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+
+/* ---------- architecture ---------- */
+
+.arch-layer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 16px 20px;
+  margin: 0 0 12px;
+}
+
+.arch-layer h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.arch-layer p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.arch-layer code {
+  font-size: 12px;
+}
+
+/* ---------- footer ---------- */
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 0;
+  margin-top: 56px;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+footer .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+footer a {
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: var(--accent);
+}
+
+/* ---------- typography niceties ---------- */
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+
+p a:hover,
+li a:hover {
+  border-bottom-color: var(--accent);
+}
+
+::selection {
+  background: rgba(0, 212, 170, 0.3);
+  color: var(--text);
+}
+
+/* ---------- mobile tweaks ---------- */
+
+@media (max-width: 540px) {
+  .hero {
+    padding: 56px 0 40px;
+  }
+  section {
+    padding: 40px 0;
+  }
+  .hero .compare {
+    font-size: 12px;
+    padding: 14px 16px;
+  }
+  pre {
+    font-size: 12px;
+    padding: 14px 16px;
+  }
+  .demo-meta dl {
+    grid-template-columns: 1fr;
+  }
+  .demo-meta dt {
+    margin-top: 8px;
+  }
+}
