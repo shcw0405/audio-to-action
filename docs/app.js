@@ -1,11 +1,17 @@
 /* audio-to-action — interactive demo state machine
  *
  * Drives:
- *   1. Step buttons   ▶ run → spinner → ✓ done, with dependents unlocked
- *   2. Diarization side-step  (synthetic example reveal)
- *   3. A–F choice menu — every option SERVES the user. No refusals.
- *   4. E's draft → confirm → send flow (the only place "拦动作" actually
- *      enforces — sending is irreversible, so we ask twice)
+ *   1. STEP 1 (transcribe & understand) — merges what used to be
+ *      probe → ASR → normalize → classify into one button. Hydrates a
+ *      cleaned-transcript preview + a friendly classification card from
+ *      docs/demo_responses.json.
+ *   2. STEP 2 (route) — A–F choice menu. Every option SERVES the user.
+ *      No refusals.
+ *   3. E's draft → confirm → send flow (the only place we truly gate
+ *      action — sending is irreversible, so we ask twice)
+ *
+ * The two "看运行细节" / "多说话人是怎么分的" panels use native <details>,
+ * so no JS state is needed for them.
  *
  * Real LLM outputs come from docs/demo_responses.json, captured via
  * `scripts/capture_demo_responses.py` against minimax-m27-gw on a real
@@ -22,20 +28,17 @@
   /** UI-compressed simulation delays. The "real" wall-clock numbers are surfaced
    *  via the [data-elapsed] indicator inside each step's output. */
   const STEP_DELAYS = {
-    probe:     350,
-    asr:       1600,
-    normalize: 300,
-    diarize:   600,
-    classify:  1400,
-    route:     250,
+    transcribe: 2200,   // probe + ASR + normalize + classify, animated
+    route:      250,
   };
 
   let LLM_DATA = null;  // populated from fetch on load
 
   function realTime(stepId) {
-    if (stepId === 'asr') return '实际 wall-clock 898s · 0.83× 实时 · 12 分 29 秒音频（动画压缩到 ~1.6s）';
-    if (stepId === 'classify' && LLM_DATA?.classify?.elapsed_s) {
-      return `LLM 调用 ${LLM_DATA.classify.elapsed_s}s · model: ${LLM_DATA._meta?.model || '?'} · ${LLM_DATA.classify.usage?.completion_tokens || '?'} comp tokens`;
+    if (stepId === 'transcribe') {
+      const cls = LLM_DATA?.classify?.elapsed_s;
+      const model = LLM_DATA?._meta?.model || '?';
+      return `ASR 实际 wall-clock 898s（0.83× 实时，12 分 29 秒音频）· 分类 LLM 调用 ${cls ?? '?'}s · 模型 ${model} · 演示动画压缩到 ~2s`;
     }
     return '';
   }
@@ -140,7 +143,6 @@
     const btn = e.target.closest('[data-action], .choice');
     if (!btn) return;
     if (btn.dataset.action === 'run-step')      runStep(btn);
-    else if (btn.dataset.action === 'run-diarize') runDiarize(btn);
     else if (btn.dataset.action === 'send-msg')    openSendConfirm();
     else if (btn.dataset.action === 'confirm-send') confirmSend();
     else if (btn.dataset.action === 'cancel-send') cancelSend();
@@ -173,8 +175,10 @@
     const contentEls = output.querySelectorAll('[data-content]');
     contentEls.forEach(el => {
       const key = el.dataset.content;
-      if (key === 'classify' && LLM_DATA?.classify?.content) {
-        el.innerHTML = renderJson(LLM_DATA.classify.content);
+      if (key === 'transcript' && LLM_DATA?.A?.content) {
+        el.innerHTML = renderMarkdown(LLM_DATA.A.content);
+      } else if (key === 'classify-card' && LLM_DATA?.classify?.content) {
+        el.innerHTML = renderClassifyCard(LLM_DATA.classify.content);
       }
     });
 
@@ -195,7 +199,7 @@
       if (depBtn) depBtn.disabled = false;
     });
 
-    if (!isRerun && id !== 'probe') {
+    if (!isRerun && id !== 'transcribe') {
       const rect = output.getBoundingClientRect();
       const offset = rect.bottom - window.innerHeight;
       if (offset > 0) {
@@ -204,31 +208,48 @@
     }
   }
 
-  // ---------- diarization side-step ---------- //
+  // ---------- classification card renderer ---------- //
 
-  async function runDiarize(btn) {
-    if (btn.disabled && !btn.classList.contains('done')) return;
-    const stepEl = btn.closest('.demo-step');
-    const output = stepEl.querySelector('.step-output');
-    const isRerun = btn.classList.contains('done');
+  const LABEL_CN = {
+    group_meeting:                '组会（多人 + 任务分派）',
+    advisor_student_discussion:   '师生 1:1 讨论',
+    casual_discussion:            '临时讨论 / coffee chat',
+    voice_memo:                   '语音备忘录',
+    student_progress_report:      '学生进展汇报',
+    unknown:                      '不确定 / 不归类',
+  };
 
-    btn.classList.remove('done');
-    btn.classList.add('running');
-    btn.disabled = true;
-    btn.textContent = '加载示例';
+  function renderClassifyCard(jsonStr) {
+    let obj;
+    try { obj = JSON.parse(jsonStr); }
+    catch { return `<pre><code>${escapeHtml(jsonStr)}</code></pre>`; }
 
-    if (isRerun) {
-      output.classList.remove('visible');
-      await sleep(120);
-    }
+    const conf = Math.max(0, Math.min(1, Number(obj.confidence) || 0));
+    const confPct = Math.round(conf * 100);
+    const altPct = obj.alternative_confidence != null
+      ? Math.round(Number(obj.alternative_confidence) * 100)
+      : null;
+    const labelCN = LABEL_CN[obj.label] || obj.label || 'unknown';
+    const altCN = obj.alternative_label
+      ? (LABEL_CN[obj.alternative_label] || obj.alternative_label)
+      : null;
+    const confTone = conf >= 0.6 ? 'ok' : 'warn';
+    const confNote = conf >= 0.6
+      ? '· 走默认 preset'
+      : '· 低于 0.6 阈值，会让用户决定';
 
-    await sleep(STEP_DELAYS.diarize);
-    output.classList.add('visible');
-
-    btn.classList.remove('running');
-    btn.classList.add('done');
-    btn.disabled = false;
-    btn.textContent = '✓ 已展示（点击重看）';
+    return `
+      <div class="verdict-label-row">
+        <span class="verdict-label-zh">${escapeHtml(labelCN)}</span>
+        <code class="verdict-label-id">${escapeHtml(obj.label || 'unknown')}</code>
+      </div>
+      <div class="confidence-bar ${confTone}">
+        <div class="confidence-fill" style="width: ${confPct}%"></div>
+      </div>
+      <p class="verdict-confidence">置信度 ${confPct}% ${confNote}</p>
+      ${obj.rationale ? `<p class="verdict-reason"><strong>理由：</strong>${escapeHtml(obj.rationale)}</p>` : ''}
+      ${altCN ? `<p class="verdict-alt">第二可能：<strong>${escapeHtml(altCN)}</strong>${altPct != null ? `（${altPct}%）` : ''}</p>` : ''}
+    `;
   }
 
   // ---------- choice handler — every option SERVES, no refusals ---------- //

@@ -282,6 +282,224 @@ p {
   }
 }
 
+/* ---------- output section title (inside merged step) ---------- */
+
+.output-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-faint);
+  margin: 22px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.demo-step .output-section-title:first-of-type {
+  margin-top: 18px;
+}
+
+/* ---------- transcript preview ---------- */
+
+.transcript-preview {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  max-height: 280px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.transcript-preview p {
+  margin: 0 0 10px;
+}
+
+.transcript-preview p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- classification verdict card ---------- */
+
+.verdict-card {
+  background: rgba(0, 212, 170, 0.04);
+  border: 1px solid var(--accent-dim);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 16px 20px;
+}
+
+.verdict-label-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+}
+
+.verdict-label-zh {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.verdict-label-id {
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(0, 212, 170, 0.1);
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--accent-dim);
+}
+
+.confidence-bar {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 4px 0 6px;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.6s ease-out;
+}
+
+.confidence-bar.warn .confidence-fill {
+  background: var(--warn);
+}
+
+.verdict-confidence {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.verdict-reason {
+  font-size: 13.5px;
+  color: var(--text);
+  margin: 0 0 8px;
+  line-height: 1.6;
+}
+
+.verdict-reason strong {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.verdict-alt {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.verdict-alt strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ---------- collapsible tech details ---------- */
+
+.tech-details {
+  margin: 22px 0 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tech-details + .tech-details {
+  margin-top: 12px;
+}
+
+.tech-details > summary {
+  cursor: pointer;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dim);
+  list-style: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tech-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.tech-details > summary::before {
+  content: "▶";
+  display: inline-block;
+  font-size: 10px;
+  color: var(--text-faint);
+  transition: transform 0.2s;
+}
+
+.tech-details[open] > summary {
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.tech-details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.tech-details > summary:hover {
+  color: var(--accent);
+}
+
+.tech-details-body {
+  padding: 18px 22px 20px;
+}
+
+.tech-details-body h5 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-faint);
+  margin: 18px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tech-details-body h5:first-child {
+  margin-top: 0;
+}
+
+.tech-details-body pre {
+  margin: 6px 0 0;
+}
+
+.tech-details-body .tech-note {
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid var(--warn);
+  padding: 10px 14px;
+  margin: 16px 0 0;
+  font-size: 13.5px;
+  border-radius: 0 4px 4px 0;
+}
+
+.tech-details-body .tech-note strong {
+  color: var(--warn);
+}
+
+.tech-details-body .diarize-disclaimer {
+  font-size: 13px;
+  color: var(--warn);
+  background: rgba(245, 158, 11, 0.08);
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin: 0 0 16px;
+}
+
 /* =========================================================================
    ============ INTERACTIVE DEMO — audio + steps + diarization ============
    ========================================================================= */
